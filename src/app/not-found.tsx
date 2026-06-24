@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Logo } from "@/components/landing/Logo";
 
 export const metadata: Metadata = {
-  title: "Page not found — ChadWallet",
+  title: "Page not found — MemePilot",
 };
 
 export default function NotFound() {
@@ -15,7 +15,7 @@ export default function NotFound() {
       />
       <div className="relative flex items-center gap-2.5">
         <Logo />
-        <span className="text-lg font-black tracking-[-0.03em]">ChadWallet</span>
+        <span className="text-lg font-black tracking-[-0.03em]">MemePilot</span>
       </div>
       <p className="relative font-mono text-sm font-bold uppercase tracking-[0.2em] text-cw-green">
         Error 404

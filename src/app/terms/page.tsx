@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — ChadWallet",
+  title: "Terms of Service — MemePilot",
   description:
-    "The terms for using ChadWallet. Placeholder pending review. Memecoins are risky.",
+    "The terms for using MemePilot. Placeholder pending review. Memecoins are risky.",
 };
 
 export default function TermsPage() {
@@ -12,7 +12,7 @@ export default function TermsPage() {
     <LegalPage title="Terms of Service" lastUpdated="June 24, 2026">
       <LegalSection heading="Acceptance of terms">
         <p>
-          By using the ChadWallet website and app you agree to these terms. This
+          By using the MemePilot website and app you agree to these terms. This
           is placeholder copy and will be replaced with our final, reviewed
           terms before launch.
         </p>
@@ -21,7 +21,7 @@ export default function TermsPage() {
       <LegalSection heading="Risk disclaimer">
         <p>
           Memecoins are highly volatile and speculative. You can lose some or all
-          of the funds you trade. ChadWallet does not provide financial, legal,
+          of the funds you trade. MemePilot does not provide financial, legal,
           or tax advice. Nothing on this site is a recommendation to buy or sell
           any asset. Trade at your own risk.
         </p>
@@ -29,7 +29,7 @@ export default function TermsPage() {
 
       <LegalSection heading="Non-custodial service">
         <p>
-          ChadWallet is non-custodial. You are solely responsible for your wallet
+          MemePilot is non-custodial. You are solely responsible for your wallet
           and the transactions you authorize. We cannot reverse on-chain
           transactions or recover lost keys.
         </p>

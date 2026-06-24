@@ -1,4 +1,4 @@
-# PROGRESS.md — ChadWallet Web status
+# PROGRESS.md — MemePilot Web status
 
 **Keep this current.** At the end of every stage, check off tasks, set the status, and add a session-log row.
 
@@ -58,3 +58,4 @@ Status key: ⬜ not started · 🟦 in progress · ✅ done · ⛔ blocked
 | 2026-06-24 | 1 | Landing page: ticker/header/hero/features/trust/final-CTA/footer in src/components/landing/; next/font, scroll-reveal, dynamic OG; ADR-013 (tokens + glow approach). Brand assets still placeholder. | `stage-1-landing` |
 | 2026-06-24 | 1 | Wired real logo mark (public/brand/logo-mark.svg via CSS mask in Logo.tsx, header+footer) + confirmed store URLs flow from NEXT_PUBLIC_* (no "#" fallback). | `stage-1-landing` |
 | 2026-06-24 | 1 | Production hardening: security headers + enforced CSP (next.config), robots.ts/sitemap.ts (noindex off-prod), /privacy + /terms stubs (footer wired), branded 404 + 500, @vercel/analytics + download_click event, DEPLOYMENT.md in source-of-truth. ADR-015 (CSP). Verified headers/robots/sitemap, no secret leak. | `stage-1-landing` |
+| 2026-06-24 | — | Rebrand product ChadWallet → MemePilot (UI text, metadata, OG image, legal pages, package name `memepilot-web`, README + docs, domain → memepilot.xyz). Store URLs/app IDs, screenshots, `cw-` tokens, logo-mark placeholder kept. Download CTAs → "Get the app". ADR-016. | `main` |

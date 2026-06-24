@@ -6,7 +6,7 @@ Two tools, one repo.
 - **Claude Code** owns the *codebase*. It implements the frontend code **from** the design bundles **and** builds all backend/data/logic. It is the single source of truth for what ships, and it enforces `CLAUDE.md`.
 
 ## The loop
-1. **(Once) Set up the design system in Claude Design.** Point it at this repo (brand tokens in the @theme block in src/app/globals.css (Tailwind v4 is CSS-first; there is no tailwind.config) + `CLAUDE.md`) and upload the ChadWallet app screenshots so designs match the real app. Optionally web-capture `fomo.family` as a landing-layout reference.
+1. **(Once) Set up the design system in Claude Design.** Point it at this repo (brand tokens in the @theme block in src/app/globals.css (Tailwind v4 is CSS-first; there is no tailwind.config) + `CLAUDE.md`) and upload the MemePilot app screenshots so designs match the real app. Optionally web-capture `fomo.family` as a landing-layout reference.
 2. **Design a screen/flow** in Claude Design — chat for structure/big changes, inline comments for spacing/color/component tweaks.
 3. **Export → Handoff to Claude Code** (local agent, against this repo). Sends design intent + component structure + styling, not a screenshot.
 4. **Claude Code implements** it as Next.js + Tailwind, following the rules below. Save the exported reference/bundle under `design/` for traceability.

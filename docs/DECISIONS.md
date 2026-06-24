@@ -111,6 +111,13 @@ Format: `ADR-NNN — Title` · Status · Date · Context · Decision · Conseque
 - **Decision:** Ship an **enforced** CSP (not Report-Only) that locks down `default-src`/`object-src 'none'`/`frame-ancestors 'none'`/`base-uri 'self'`/`form-action 'self'`, allows only what we load (`'self'`, Vercel Analytics `va.vercel-scripts.com`, Google Fonts domains as belt-and-suspenders since next/font self-hosts, `img-src data: blob:`), and keeps `'unsafe-inline'` for `script-src` and `style-src`. Dev-only adds `'unsafe-eval'` + `ws:` for Turbopack HMR. `X-Frame-Options: DENY` backs up `frame-ancestors`.
 - **Consequences:** A working, enforced CSP today without breaking SSG. Residual risk is script/style injection *if* an XSS bug existed — acceptable for a static, no-auth marketing page with no user input. Tightening path: when auth/trading lands (Stage 3+), add nonce middleware + `'strict-dynamic'` and drop `'unsafe-inline'` for scripts.
 
+### ADR-016 — Product renamed ChadWallet → MemePilot
+
+- **Status:** Accepted · **Date:** 2026-06-24
+- **Context:** The product is rebranding from ChadWallet to MemePilot. The repo/remote is already `MemePilot`. The published mobile app store listings are still ChadWallet-branded.
+- **Decision:** Rename all user-facing text, metadata (title/description/OG/Twitter/OG-image), legal pages, `package.json` name (`memepilot-web`), README, and docs to **MemePilot**; example domain `chadwallet.xyz` → `memepilot.xyz`. **Keep unchanged:** the store URLs / app identifiers (`id6757367474`, `xyz.chadwallet.www`) since they point to the real published app; the app screenshot images (they show the real app UI — only alt text was rebranded); the `cw-` `@theme` token prefix and `.cw-logo-mark` class (historical brand palette); `public/brand/logo-mark.svg` (placeholder mark, final MemePilot mark pending). Download CTAs use the neutral "Get the app" (never "Download MemePilot").
+- **Consequences:** Web is MemePilot-branded now. Pending follow-ups: store-listing rename (links unchanged until then), final MemePilot logo mark, and an eventual `cw-`→`mp-` token rename if desired. The PRD (`ChadWallet-Web-PRD.md`) and the frozen design reference (`design/`) keep the old name as historical artifacts.
+
 ---
 
 ## Proposed / open (not yet decided)

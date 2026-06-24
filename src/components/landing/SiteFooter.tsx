@@ -18,7 +18,7 @@ export function SiteFooter() {
           <div className="flex items-center gap-2.5">
             <Logo />
             <span className="text-lg font-black tracking-[-0.03em]">
-              ChadWallet
+              MemePilot
             </span>
           </div>
           <p className="mt-4 text-sm font-medium leading-relaxed text-cw-text-muted">
@@ -31,7 +31,7 @@ export function SiteFooter() {
               target="_blank"
               rel="noopener noreferrer"
               className={socialClass}
-              aria-label="ChadWallet on X"
+              aria-label="MemePilot on X"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -45,7 +45,7 @@ export function SiteFooter() {
             <a
               href="#"
               className={socialClass}
-              aria-label="ChadWallet on Discord"
+              aria-label="MemePilot on Discord"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -93,7 +93,7 @@ export function SiteFooter() {
               Get the app
             </span>
             <SmartDownloadLink location="footer" className="px-5">
-              Download ↓
+              Get the app
             </SmartDownloadLink>
           </div>
         </nav>
@@ -101,7 +101,7 @@ export function SiteFooter() {
 
       <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-3 border-t border-white/6 px-[clamp(1.125rem,5vw,3rem)] py-4">
         <span className="text-[13px] font-medium text-cw-text-muted">
-          © {FOOTER_YEAR} ChadWallet. All rights reserved.
+          © {FOOTER_YEAR} MemePilot. All rights reserved.
         </span>
         <span className="text-xs font-medium text-cw-text-muted">
           Memecoins are risky. Trade at your own risk. Not financial advice.

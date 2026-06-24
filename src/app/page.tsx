@@ -36,7 +36,7 @@ export default function Home() {
             titleAccent="in seconds"
             label="Trading"
             screenshot={tokenScreen}
-            screenshotAlt="ChadWallet token screen with a live price chart and buy/sell controls"
+            screenshotAlt="MemePilot token screen with a live price chart and buy/sell controls"
             body="Buy and sell trending tokens before they trend. One tap, live charts, instant fills — no extensions, no seed phrase, no friction."
           />
           <FeatureRow
@@ -45,7 +45,7 @@ export default function Home() {
             titleAccent="KOL traders"
             label="KOL feed"
             screenshot={kolScreen}
-            screenshotAlt="ChadWallet KOL feed showing top traders' live buys and sells"
+            screenshotAlt="MemePilot KOL feed showing top traders' live buys and sells"
             reversed
             body="See exactly what the smartest traders ape into — the second they do it. Track wins, win-rates and live PnL. Copy the winners, dodge the rugs."
           />
@@ -55,7 +55,7 @@ export default function Home() {
             titleAccent="in one tap"
             label="Launch"
             screenshot={launchScreen}
-            screenshotAlt="ChadWallet one-tap memecoin launch form"
+            screenshotAlt="MemePilot one-tap memecoin launch form"
             body="Turn any meme, viral tweet, or shower thought into a coin. Name it, ticker it, launch it — live on Solana in seconds."
           />
           <FeatureRow
@@ -64,7 +64,7 @@ export default function Home() {
             titleAccent="in one place"
             label="Portfolio"
             screenshot={portfolioScreen}
-            screenshotAlt="ChadWallet portfolio screen with holdings and live PnL"
+            screenshotAlt="MemePilot portfolio screen with holdings and live PnL"
             reversed
             body="Your whole bag, live PnL, rewards, deposits and instant withdrawals — all on one screen. Non-custodial, always yours."
           />

@@ -1,4 +1,4 @@
-# CLAUDE.md — ChadWallet Web
+# CLAUDE.md — MemePilot Web
 
 Operating manual for Claude Code. **Read this first, every session.** Detailed plan and rationale live in `docs/`.
 
@@ -7,7 +7,7 @@ Operating manual for Claude Code. **Read this first, every session.** Detailed p
 ---
 
 ## What this is
-A marketing **landing page** (must-have) + a **web trading page** (bonus) for **ChadWallet**, a social-first **Solana** memecoin trading wallet. It's the web companion to the existing mobile app, modeled on `fomo.family`. The full product spec is the PRD in this Claude project; the build details are in `docs/`.
+A marketing **landing page** (must-have) + a **web trading page** (bonus) for **MemePilot**, a social-first **Solana** memecoin trading wallet. It's the web companion to the existing mobile app, modeled on `fomo.family`. The full product spec is the PRD in this Claude project; the build details are in `docs/`.
 
 ## Source of truth — read in this order
 1. **`CLAUDE.md`** (this file) — rules + repo map.
@@ -48,7 +48,7 @@ A marketing **landing page** (must-have) + a **web trading page** (bonus) for **
 
 ## Repo map (target — created across stages)
 ```
-chadwallet-web/
+memepilot-web/
 ├── CLAUDE.md                  # this file
 ├── README.md
 ├── .env.example               # env var template (copy to .env.local)
@@ -88,6 +88,7 @@ chadwallet-web/
 ```
 
 ## Brand tokens (extracted from the app screenshots)
+> The `cw-` token prefix is historical (the brand palette); product is MemePilot.
 ```
 --cw-bg          #020818   near-black navy app background
 --cw-surface     #0A1122   cards / elevated panels

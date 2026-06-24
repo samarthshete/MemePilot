@@ -25,7 +25,7 @@ export default function Error({
       />
       <div className="relative flex items-center gap-2.5">
         <Logo />
-        <span className="text-lg font-black tracking-[-0.03em]">ChadWallet</span>
+        <span className="text-lg font-black tracking-[-0.03em]">MemePilot</span>
       </div>
       <p className="relative font-mono text-sm font-bold uppercase tracking-[0.2em] text-cw-red">
         Something broke

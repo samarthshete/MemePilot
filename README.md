@@ -1,6 +1,6 @@
-# ChadWallet Web
+# MemePilot Web
 
-A marketing **landing page** + a **web trading page** for **ChadWallet**, a
+A marketing **landing page** + a **web trading page** for **MemePilot**, a
 social-first, non-custodial **Solana** memecoin trading wallet. This is the web
 companion to the existing mobile app.
 

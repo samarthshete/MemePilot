@@ -32,7 +32,7 @@ export function Hero() {
           </h1>
 
           <p className="mt-5 max-w-[480px] text-[clamp(1rem,1.5vw,1.1875rem)] font-medium leading-relaxed text-cw-text-muted">
-            Get ChadWallet today. Never miss the next breakout! Discover, follow
+            Get MemePilot today. Never miss the next breakout! Discover, follow
             the smartest traders, and ape in seconds — no seed phrase.
           </p>
 
@@ -40,7 +40,7 @@ export function Hero() {
           <div className="cw-glow-panel mt-7 rounded-[1.375rem] border border-cw-green/30 bg-gradient-to-b from-cw-green/10 to-cw-green/[0.03] p-5">
             <div className="mb-3.5 flex items-center justify-between gap-3">
               <span className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-cw-green">
-                Download the app
+                Get the app
               </span>
               <span className="text-xs font-semibold text-cw-text-muted">
                 iOS · Android
@@ -84,7 +84,7 @@ export function Hero() {
           <PhoneMockup
             label="Trading"
             screenshot={tokenScreen}
-            alt="ChadWallet trading screen showing a live token price, chart and one-tap buy"
+            alt="MemePilot trading screen showing a live token price, chart and one-tap buy"
             priority
             className="relative z-[1]"
           />

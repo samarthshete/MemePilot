@@ -7,10 +7,10 @@ export function SiteHeader() {
       <a
         href="#top"
         className="flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cw-green focus-visible:ring-offset-2 focus-visible:ring-offset-cw-bg"
-        aria-label="ChadWallet home"
+        aria-label="MemePilot home"
       >
         <Logo />
-        <span className="text-lg font-black tracking-[-0.03em]">ChadWallet</span>
+        <span className="text-lg font-black tracking-[-0.03em]">MemePilot</span>
       </a>
 
       <div className="flex shrink-0 items-center gap-2.5">
@@ -21,7 +21,7 @@ export function SiteHeader() {
         >
           Sign in
         </button>
-        <SmartDownloadLink className="px-4 text-sm">Download</SmartDownloadLink>
+        <SmartDownloadLink className="px-4 text-sm">Get the app</SmartDownloadLink>
       </div>
     </header>
   );

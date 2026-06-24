@@ -1,4 +1,4 @@
-# PLAN.md — ChadWallet Web build plan
+# PLAN.md — MemePilot Web build plan
 
 Staged plan. **Phase 1 (Stages 0–3) is the shippable landing page.** Stages 4–6 are the bonus trading page. Each stage ends at a **human review gate** — Claude Code stops, you review, then you start the next stage.
 

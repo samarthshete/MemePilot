@@ -1,7 +1,8 @@
 # public/brand — brand assets
 
-Real ChadWallet assets live here. The landing page imports several of these
-directly (static imports → optimized by next/image).
+Real MemePilot brand assets live here (the screenshots show the published app).
+The landing page imports several of these directly (static imports → optimized
+by next/image).
 
 ## Current layout
 - `logo/light.png` — black "chad" line-art on light (use on light/splash bg)
