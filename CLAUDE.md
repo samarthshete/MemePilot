@@ -12,8 +12,9 @@ A marketing **landing page** (must-have) + a **web trading page** (bonus) for **
 ## Source of truth — read in this order
 1. **`CLAUDE.md`** (this file) — rules + repo map.
 2. **`docs/PLAN.md`** — staged build plan, tasks, and acceptance criteria. What to build, in what order.
-3. **`docs/DECISIONS.md`** — why each tool/approach was chosen (ADRs). **Don't contradict an ADR without proposing a new one.**
-4. **`docs/PROGRESS.md`** — current status + session log. **Update it as you work.**
+3. **`docs/DESIGN-WORKFLOW.md`** — how Claude Design and Claude Code split the work + handoff rules.
+4. **`docs/DECISIONS.md`** — why each tool/approach was chosen (ADRs). **Don't contradict an ADR without proposing a new one.**
+5. **`docs/PROGRESS.md`** — current status + session log. **Update it as you work.**
 
 ## Stack
 - **Next.js (App Router) + TypeScript (strict) + Tailwind CSS**
@@ -32,7 +33,7 @@ A marketing **landing page** (must-have) + a **web trading page** (bonus) for **
 4. **Solana-only, non-custodial only.** Never hold or import user keys. Privy embedded wallet only.
 5. **Never auto-execute a swap.** A buy/sell fires *only* on an explicit user click, *after* showing the quote, slippage, and the risk disclaimer. Test with tiny amounts on mainnet.
 6. **Validate at the boundary.** Parse every external response with `zod` before using it. Every data fetch needs **loading + empty + error** states. No `any`.
-7. **On-brand only.** Use the design tokens (below / `tailwind.config`). No off-brand colors.
+7. **On-brand only.** Use the design tokens (below / the @theme block in src/app/globals.css (Tailwind v4 is CSS-first; there is no tailwind.config)). No off-brand colors.
 8. **Stay in scope.** Ship landing before trading. Do **not** build Non-Goals: coin launch/relaunch, social feed, KOL copy-trading, leaderboards, referrals/rewards, multi-chain, MoonPay embed, candlestick TradingView terminal.
 9. **Small, reviewed steps.** One stage per branch; conventional commits. After each stage: run checks → update `docs/PROGRESS.md` and `docs/DECISIONS.md` → **stop for human review. Do not start the next stage.**
 10. `CLAUDE.md` is context, not a security boundary. Real enforcement is env vars, permissions, and CI — but follow these rules anyway.

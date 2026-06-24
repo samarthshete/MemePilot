@@ -72,6 +72,12 @@ Format: `ADR-NNN — Title` · Status · Date · Context · Decision · Conseque
 - **Decision:** Keep the scaffold defaults. Define brand tokens in `src/app/globals.css` under `@theme` (e.g. `--color-cw-bg`), which generates utilities like `bg-cw-bg` / `text-cw-green` — the v4 equivalent of extending `theme.colors` in `tailwind.config`. Pin the Turbopack workspace root via `turbopack.root` in `next.config.ts` so the build doesn't traverse above the project. Added **zod** (required by hard rule 6) as the single new runtime dep.
 - **Consequences:** "Brand tokens in `tailwind.config`" now means "brand tokens in `@theme`"; same effect, different file. No `tailwind.config.js` will exist — don't create one expecting it to be read. If we ever need JS-side config (plugins, complex theme logic), add `@config` or revisit.
 
+### ADR-012 — Claude Design for UI design, Claude Code for implementation
+- **Status:** Accepted · **Date:** 2026-06-24
+- **Context:** We want fast, on-brand UI without a manual design-to-dev handoff.
+- **Decision:** Design screens in Claude Design (ingesting our repo tokens + app screenshots), hand the bundle off natively to Claude Code, which implements the frontend code and all backend. Claude Code is the single source of truth for the codebase and enforces CLAUDE.md.
+- **Consequences:** Design-led for Stages 1 and 4; tighter brand fidelity; one extra tool + usage to manage. The handoff is a visual spec, not an override of the architecture rules.
+
 ---
 
 ## Proposed / open (not yet decided)

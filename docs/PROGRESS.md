@@ -49,3 +49,4 @@ Status key: ⬜ not started · 🟦 in progress · ✅ done · ⛔ blocked
 |------|-------|--------------|-----------------|
 | 2026-06-24 | — | Created CLAUDE.md, PLAN, DECISIONS, PROGRESS, PROMPTS, .env.example, review-gate skill | — |
 | 2026-06-24 | 0 | Scaffolded Next.js 16 / React 19 / TS strict / Tailwind v4; brand tokens + dark base; `lib/env.ts` (zod) + `lib/cache.ts`; `/api/health`; `.env.example`; `public/brand/README.md`. Docs moved to `docs/`. ADR-011 added. | `stage-0-wiring` |
+| 2026-06-24 | docs | Aligned docs to Tailwind v4; added Claude Design workflow (ADR-012, DESIGN-WORKFLOW.md, design/) | `stage-0-wiring` |

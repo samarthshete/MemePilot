@@ -12,7 +12,7 @@ Legend: ✅ ship-critical · 🟡 bonus · Effort is rough.
 Tasks
 - `create-next-app` (App Router, TypeScript, Tailwind, ESLint) into this repo, preserving `CLAUDE.md`, `docs/`, `.claude/`, `.env.example`.
 - Add `"typecheck": "tsc --noEmit"` to scripts; TS strict on.
-- Wire brand tokens into `tailwind.config` + `globals.css` (palette in CLAUDE.md). Add a dark base layout.
+- Wire brand tokens into the @theme block in src/app/globals.css (Tailwind v4 is CSS-first; there is no tailwind.config) (palette in CLAUDE.md). Add a dark base layout.
 - `src/lib/env.ts` — zod-validated env loader that separates public vs server vars and throws on missing.
 - `src/lib/cache.ts` — tiny TTL cache helper (in-memory now; swappable for KV later).
 - `src/app/api/health/route.ts` — returns `{ ok: true }`.
@@ -27,6 +27,8 @@ Acceptance criteria
 
 ## Stage 1 — Landing page (static) ✅ (~1–2 days)
 **Goal:** brand-accurate marketing page that drives downloads. Mirrors fomo.family structure.
+
+_Design-led: implement from the Claude Design handoff bundle in design/landing/ (see docs/DESIGN-WORKFLOW.md). The design is the visual target; Hard Rules still apply._
 
 Tasks
 - **Hero:** logo, headline ("Find the next 100x memecoins here"), sub-copy, primary CTA.
@@ -81,6 +83,8 @@ Acceptance criteria
 
 ## Stage 4 — Trading page shell + chart 🟡 (~1–2 days)
 **Goal:** `/t/[address]` three-column layout with a real price chart. Read-only, no login.
+
+_Design-led: implement from the Claude Design handoff bundle in design/trading/ (see docs/DESIGN-WORKFLOW.md). The design is the visual target; Hard Rules still apply._
 
 Tasks
 - Three columns: **left** trending list (reuse `/api/trending`, click loads a token), **middle** token header (logo, name, $price, % change, contract chip) + **Lightweight Charts** line/area chart, **right** empty Buy/Sell placeholder.
