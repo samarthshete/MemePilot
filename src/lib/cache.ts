@@ -14,6 +14,9 @@
 type Entry<T> = { value: T; expiresAt: number };
 
 const store = new Map<string, Entry<unknown>>();
+// In-flight fetches, keyed by cache key — concurrent callers on a cold key share
+// the same promise so we make exactly ONE upstream call per cache window.
+const inflight = new Map<string, Promise<unknown>>();
 
 /** Return the cached value, or `undefined` if missing/expired. */
 export function get<T>(key: string): T | undefined {
@@ -32,9 +35,9 @@ export function set<T>(key: string, value: T, ttlMs: number): void {
 }
 
 /**
- * Return the cached value if fresh; otherwise run `fetcher`, cache its result
- * for `ttlMs`, and return it. Concurrent callers may each run `fetcher` once on
- * a cold key — acceptable for our low-concurrency proxy.
+ * Return the cached value if fresh; otherwise run `fetcher` once, cache its
+ * result for `ttlMs`, and return it. Concurrent callers on a cold key share a
+ * single in-flight `fetcher` run (deduped), so one upstream call serves them all.
  */
 export async function getOrSet<T>(
   key: string,
@@ -44,7 +47,19 @@ export async function getOrSet<T>(
   const cached = get<T>(key);
   if (cached !== undefined) return cached;
 
-  const value = await fetcher();
-  set(key, value, ttlMs);
-  return value;
+  const existing = inflight.get(key);
+  if (existing) return existing as Promise<T>;
+
+  const promise = (async () => {
+    try {
+      const value = await fetcher();
+      set(key, value, ttlMs);
+      return value;
+    } finally {
+      inflight.delete(key);
+    }
+  })();
+
+  inflight.set(key, promise);
+  return promise;
 }

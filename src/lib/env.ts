@@ -1,17 +1,15 @@
 import { z } from "zod";
 
 /**
- * Environment access, validated with zod at the boundary (CLAUDE.md hard rule 6).
+ * SERVER-ONLY environment access — secrets, validated with zod at the boundary
+ * (CLAUDE.md hard rule 6). `getServerEnv()` / `requireServer()` throw if read in
+ * the browser. Never import this into a Client Component — that would bundle the
+ * secret-key NAMES into the client. Public (`NEXT_PUBLIC_*`) values live in the
+ * separate `public-env.ts` so client code can read them safely.
  *
- * Two surfaces:
- *  - `getServerEnv()` / `requireServer()` — secrets. SERVER-ONLY. Reads throw if
- *    they ever run in the browser. Never import these into a Client Component.
- *  - `publicEnv` / `requirePublic()` — `NEXT_PUBLIC_*` values that are safe to
- *    ship to the browser (Privy App ID, site URL, store links, public RPC).
- *
- * All vars are optional for now (Stage 0). As features land, either flip a field
- * to required in the schema, or call the `require*` helper at the use site to get
- * a clear "missing var" error instead of a silent `undefined`.
+ * All vars are optional for now. As features land, either flip a field to
+ * required in the schema, or call `requireServer` at the use site to get a clear
+ * "missing var" error instead of a silent `undefined`.
  */
 
 function formatIssues(error: z.ZodError): string {
@@ -63,39 +61,4 @@ export function requireServer<K extends keyof ServerEnv>(
     );
   }
   return value as NonNullable<ServerEnv[K]>;
-}
-
-/* ------------------------------ public (safe) ----------------------------- */
-
-const publicEnvSchema = z.object({
-  NEXT_PUBLIC_PRIVY_APP_ID: z.string().min(1).optional(),
-  NEXT_PUBLIC_SITE_URL: z.url().optional(),
-  NEXT_PUBLIC_SOLANA_RPC_URL: z.url().optional(),
-  NEXT_PUBLIC_APP_STORE_URL: z.url().optional(),
-  NEXT_PUBLIC_PLAY_STORE_URL: z.url().optional(),
-});
-
-export type PublicEnv = z.infer<typeof publicEnvSchema>;
-
-// NEXT_PUBLIC_* are statically inlined by Next at build time, so each must be
-// referenced explicitly (not via a dynamic key) to make it into the bundle.
-export const publicEnv: PublicEnv = publicEnvSchema.parse({
-  NEXT_PUBLIC_PRIVY_APP_ID: process.env.NEXT_PUBLIC_PRIVY_APP_ID,
-  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
-  NEXT_PUBLIC_SOLANA_RPC_URL: process.env.NEXT_PUBLIC_SOLANA_RPC_URL,
-  NEXT_PUBLIC_APP_STORE_URL: process.env.NEXT_PUBLIC_APP_STORE_URL,
-  NEXT_PUBLIC_PLAY_STORE_URL: process.env.NEXT_PUBLIC_PLAY_STORE_URL,
-});
-
-/** Read a public var, throwing a clear error if it's missing. */
-export function requirePublic<K extends keyof PublicEnv>(
-  key: K,
-): NonNullable<PublicEnv[K]> {
-  const value = publicEnv[key];
-  if (value === undefined || value === "") {
-    throw new Error(
-      `Missing required public env var ${key}. Add it to .env.local (see .env.example).`,
-    );
-  }
-  return value as NonNullable<PublicEnv[K]>;
 }

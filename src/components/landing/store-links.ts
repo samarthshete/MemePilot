@@ -1,4 +1,4 @@
-import { publicEnv } from "@/lib/env";
+import { publicEnv } from "@/lib/public-env";
 
 /**
  * Store download links, sourced from public env (CLAUDE.md: client only ever

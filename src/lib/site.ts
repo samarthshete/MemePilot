@@ -1,4 +1,4 @@
-import { publicEnv } from "@/lib/env";
+import { publicEnv } from "@/lib/public-env";
 
 /** Canonical site URL (falls back to localhost for local dev). */
 export const SITE_URL = publicEnv.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";

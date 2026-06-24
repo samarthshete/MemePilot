@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import kolScreen from "../../public/brand/app-store/kol.png";
 import launchScreen from "../../public/brand/app-store/launch.png";
 import portfolioScreen from "../../public/brand/app-store/portfolio.png";
@@ -5,16 +6,38 @@ import tokenScreen from "../../public/brand/app-store/token.png";
 import { FeatureRow } from "@/components/landing/FeatureRow";
 import { FinalCta } from "@/components/landing/FinalCta";
 import { Hero } from "@/components/landing/Hero";
+import { LiveTicker } from "@/components/landing/LiveTicker";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { SiteHeader } from "@/components/landing/SiteHeader";
-import { PLACEHOLDER_TOKENS } from "@/components/landing/ticker-data";
-import { Ticker } from "@/components/landing/Ticker";
+import { TickerSkeleton } from "@/components/landing/TickerSkeleton";
 import { TrustStrip } from "@/components/landing/TrustStrip";
+import { getTrendingTokens } from "@/lib/ticker-tokens";
+
+// Server-renders the live ticker tokens (real BirdEye prices, cached 60s) and
+// hands them to the client <LiveTicker> for its 60s refresh.
+async function LiveTickerData({
+  position,
+  durationSeconds,
+}: {
+  position: "top" | "bottom";
+  durationSeconds: number;
+}) {
+  const tokens = await getTrendingTokens();
+  return (
+    <LiveTicker
+      initialTokens={tokens}
+      position={position}
+      durationSeconds={durationSeconds}
+    />
+  );
+}
 
 export default function Home() {
   return (
     <>
-      <Ticker tokens={PLACEHOLDER_TOKENS} position="top" durationSeconds={42} />
+      <Suspense fallback={<TickerSkeleton position="top" />}>
+        <LiveTickerData position="top" durationSeconds={42} />
+      </Suspense>
       <SiteHeader />
 
       <main id="top">
@@ -75,7 +98,9 @@ export default function Home() {
       </main>
 
       <SiteFooter />
-      <Ticker tokens={PLACEHOLDER_TOKENS} position="bottom" durationSeconds={38} />
+      <Suspense fallback={<TickerSkeleton position="bottom" />}>
+        <LiveTickerData position="bottom" durationSeconds={38} />
+      </Suspense>
     </>
   );
 }

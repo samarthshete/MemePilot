@@ -1,7 +1,7 @@
 /**
- * Token shape for the live ticker. This MATCHES what `/api/trending` will
- * return in Stage 2, so the <Ticker> component is the only thing that needs the
- * data — swapping static → live is a data change, not a component change.
+ * Token shape for the live ticker. This is exactly what `/api/trending` returns
+ * (live BirdEye prices), so the <Ticker> component is data-source-agnostic.
+ * Client-safe: type + fallback only — no server imports (no BirdEye key/URL).
  */
 export type Token = {
   /** Short avatar label, shown until real token logos are wired in. */
@@ -13,8 +13,8 @@ export type Token = {
   direction: "up" | "down";
 };
 
-// TODO Stage 2: replace with a server fetch of /api/trending (cached + zod-validated).
-// Keep the shape identical so <Ticker tokens={...} /> stays unchanged.
+// Static fallback: shown only if BirdEye is unreachable and there's no last-good
+// cached value, so the ticker never renders an empty/dead bar.
 export const PLACEHOLDER_TOKENS: Token[] = [
   { tag: "UNC", symbol: "unc", priceUsd: 0.007801, change24h: 22.9, direction: "up" },
   { tag: "PEE", symbol: "PEEPA", priceUsd: 0.000005151, change24h: 48.46, direction: "down" },

@@ -2,8 +2,8 @@
 
 **Keep this current.** At the end of every stage, check off tasks, set the status, and add a session-log row.
 
-**Current focus:** Stage 1 ✅ + production hardening ✅ — landing is production-ready to deploy; next is Stage 2
-**Last updated:** 2026-06-24 (landing hardened: headers/CSP, robots/sitemap, legal stubs, 404/500, analytics; repo prepped on `main`)
+**Current focus:** Stage 2 ✅ — live BirdEye ticker wired (free tier); awaiting review before Stage 3
+**Last updated:** 2026-06-24 (Stage 2: real ticker prices via curated mints + /defi/price, cached 60s, graceful fallback)
 **Live URL:** _not deployed_
 **Active branch:** `main`
 
@@ -25,9 +25,11 @@ Status key: ⬜ not started · 🟦 in progress · ✅ done · ⛔ blocked
   - ✅ real app screenshots wired (hero + 4 features) via next/image static imports; ✅ real logo mark wired (logo-mark.svg via CSS mask, recolors with currentColor); ⚠️ store badges still on-brand placeholders (no official badge SVGs yet)
   - ✅ store URLs flow from NEXT_PUBLIC_APP_STORE_URL / NEXT_PUBLIC_PLAY_STORE_URL (no more "#" fallback when .env.local is set)
   - ✅ typecheck + lint + build green; page/OG/health verified 200
-- ⬜ **Stage 2 — Live token banner**
-  - ⬜ `/api/trending` (BirdEye, cached, zod) + fallback
-  - ⬜ top + bottom marquee, items link to `/t/<address>`
+- ✅ **Stage 2 — Live token banner**
+  - ✅ `/api/trending` → `lib/birdeye.ts` (server-only, zod) + `lib/ticker-tokens.ts` (curated 8 mints), cached 60s with in-flight de-dup + last-good/placeholder fallback
+  - ✅ top + bottom marquee show REAL prices (SSR via Suspense skeleton, client refresh 60s); free-tier `/defi/price` fallback (multi_price 401-gated). ADR-017
+  - ⬜ items link to `/t/<address>` — deferred to Stage 4 (trading page not built yet)
+  - ✅ verified: real green/red prices, ONE upstream fetch per 60s window, no key/BirdEye URL in client bundle, fallback renders when BirdEye down
 - ⬜ **Stage 3 — Auth (Privy)**
   - ⬜ PrivyProvider, Apple/Google login, Solana embedded wallet, `/api/me` token verify
   - ⬜ 🎯 deploy Phase 1 to Vercel + Cloudflare DNS
