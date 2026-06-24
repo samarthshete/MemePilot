@@ -38,6 +38,7 @@ A marketing **landing page** (must-have) + a **web trading page** (bonus) for **
 8. **Stay in scope.** Ship landing before trading. Do **not** build Non-Goals: coin launch/relaunch, social feed, KOL copy-trading, leaderboards, referrals/rewards, multi-chain, MoonPay embed, candlestick TradingView terminal.
 9. **Small, reviewed steps.** One stage per branch; conventional commits. After each stage: run checks → update `docs/PROGRESS.md` and `docs/DECISIONS.md` → **stop for human review. Do not start the next stage.**
 10. `CLAUDE.md` is context, not a security boundary. Real enforcement is env vars, permissions, and CI — but follow these rules anyway.
+11. **No AI attribution.** Commits/PRs contain NO Co-Authored-By, no "Generated with Claude Code", no 🤖, and no Claude/Anthropic/AI attribution anywhere — messages, code comments, README, or package metadata.
 
 ## Commands
 - `npm run dev` — local dev server
