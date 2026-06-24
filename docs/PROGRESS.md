@@ -2,10 +2,10 @@
 
 **Keep this current.** At the end of every stage, check off tasks, set the status, and add a session-log row.
 
-**Current focus:** Stage 1 ✅ complete — awaiting human review before Stage 2
-**Last updated:** 2026-06-24 (Stage 1 landing page landed; typecheck/lint/build green)
+**Current focus:** Stage 1 ✅ + production hardening ✅ — landing is production-ready to deploy; next is Stage 2
+**Last updated:** 2026-06-24 (landing hardened: headers/CSP, robots/sitemap, legal stubs, 404/500, analytics; repo prepped on `main`)
 **Live URL:** _not deployed_
-**Active branch:** `stage-1-landing`
+**Active branch:** `main`
 
 Status key: ⬜ not started · 🟦 in progress · ✅ done · ⛔ blocked
 
