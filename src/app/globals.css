@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+/*
+ * ChadWallet brand tokens (see CLAUDE.md "Brand tokens").
+ * Defined in @theme so they generate Tailwind utilities — e.g. `bg-cw-bg`,
+ * `text-cw-green`, `border-cw-surface` — and are also available as CSS vars.
+ */
+@theme {
+  --color-cw-bg: #020818; /* near-black navy app background */
+  --color-cw-surface: #0a1122; /* cards / elevated panels */
+  --color-cw-green: #11fe9c; /* PRIMARY: buy, CTAs, positive % */
+  --color-cw-green-press: #10e48c; /* pressed / hover */
+  --color-cw-red: #ff4334; /* sell, negative %, down */
+  --color-cw-text: #ffffff; /* primary text */
+  --color-cw-text-muted: #8a93a6; /* secondary text */
+  --color-cw-splash-bg: #ffffff; /* splash background */
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Dark base: the whole app is dark, high-contrast by default. */
+html,
+body {
+  background-color: var(--color-cw-bg);
+  color: var(--color-cw-text);
+}
+
+body {
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
