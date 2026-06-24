@@ -1,7 +1,6 @@
+import type { StaticImageData } from "next/image";
 import { PhoneMockup } from "./PhoneMockup";
 import { Reveal } from "./Reveal";
-
-type Screenshot = { src: string; alt: string; width: number; height: number };
 
 /**
  * One alternating feature row: bold header + one punchy line beside a phone.
@@ -15,6 +14,7 @@ export function FeatureRow({
   body,
   label,
   screenshot,
+  screenshotAlt,
   reversed = false,
 }: {
   index: string;
@@ -22,7 +22,8 @@ export function FeatureRow({
   titleAccent: string;
   body: string;
   label: string;
-  screenshot?: Screenshot;
+  screenshot?: StaticImageData;
+  screenshotAlt?: string;
   reversed?: boolean;
 }) {
   return (
@@ -46,6 +47,7 @@ export function FeatureRow({
           <PhoneMockup
             label={label}
             screenshot={screenshot}
+            alt={screenshotAlt}
             className="w-full max-w-[280px]"
           />
         </div>

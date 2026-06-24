@@ -1,21 +1,21 @@
-import Image from "next/image";
-
-type Screenshot = { src: string; alt: string; width: number; height: number };
+import Image, { type StaticImageData } from "next/image";
 
 /**
  * Premium phone frame. If a real `screenshot` is provided it renders via
- * next/image (explicit dimensions → no CLS; `priority` for the hero LCP).
- * Until the screenshots land in public/brand/, it shows an on-brand faux app
- * screen labelled with the feature — swapping in the real image is one prop.
+ * next/image (static import → intrinsic dimensions + blur-up, so no CLS;
+ * `priority` for the hero LCP). Otherwise it shows an on-brand faux app screen
+ * labelled with the feature — swapping in a real image is one prop.
  */
 export function PhoneMockup({
   label,
   screenshot,
+  alt,
   priority = false,
   className = "",
 }: {
   label: string;
-  screenshot?: Screenshot;
+  screenshot?: StaticImageData;
+  alt?: string;
   priority?: boolean;
   className?: string;
 }) {
@@ -26,11 +26,11 @@ export function PhoneMockup({
       <div className="overflow-hidden rounded-[2.25rem]">
         {screenshot ? (
           <Image
-            src={screenshot.src}
-            alt={screenshot.alt}
-            width={screenshot.width}
-            height={screenshot.height}
+            src={screenshot}
+            alt={alt ?? label}
             priority={priority}
+            placeholder="blur"
+            sizes="(max-width: 768px) 80vw, 340px"
             className="block h-auto w-full"
           />
         ) : (
@@ -41,7 +41,7 @@ export function PhoneMockup({
   );
 }
 
-/** Branded placeholder that mimics a trading screen until real assets exist. */
+/** Branded placeholder that mimics a trading screen until a real asset exists. */
 function FauxScreen({ label }: { label: string }) {
   return (
     <div className="flex aspect-[9/19.2] flex-col gap-4 bg-gradient-to-b from-cw-surface to-cw-bg p-5">
@@ -59,12 +59,9 @@ function FauxScreen({ label }: { label: string }) {
         <span className="block font-mono text-3xl font-bold text-cw-text">
           $7.63M
         </span>
-        <span className="font-mono text-sm font-bold text-cw-green">
-          ▲ +434%
-        </span>
+        <span className="font-mono text-sm font-bold text-cw-green">▲ +434%</span>
       </div>
 
-      {/* Faux line chart */}
       <svg
         viewBox="0 0 100 40"
         preserveAspectRatio="none"

@@ -22,7 +22,7 @@ Status key: ⬜ not started · 🟦 in progress · ✅ done · ⛔ blocked
   - ✅ top/bottom live ticker (static placeholder, pure-CSS marquee, pause-on-hover), header, hero (phone-led, LCP), 4 feature rows, trust strip, final CTA, footer
   - ✅ download buttons (client device-detect → store routing) · Archivo + Space Mono via next/font · scroll-reveal (reduced-motion safe)
   - ✅ SEO/OG (metadata + dynamic next/og opengraph-image) · brand-only via @theme tokens (added cw-surface-2, cw-bezel) · responsive (360/768/1440)
-  - ⚠️ brand assets still missing — phones/logo render on-brand placeholders (see DESIGN-WORKFLOW / session notes)
+  - ✅ real app screenshots wired (hero + 4 features) via next/image static imports; ⚠️ logo mark + store badges still on-brand placeholders (no transparent SVG / official badges yet)
   - ✅ typecheck + lint + build green; page/OG/health verified 200
 - ⬜ **Stage 2 — Live token banner**
   - ⬜ `/api/trending` (BirdEye, cached, zod) + fallback

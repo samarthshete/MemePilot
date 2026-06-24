@@ -1,3 +1,7 @@
+import kolScreen from "../../public/brand/app-store/kol.png";
+import launchScreen from "../../public/brand/app-store/launch.png";
+import portfolioScreen from "../../public/brand/app-store/portfolio.png";
+import tokenScreen from "../../public/brand/app-store/token.png";
 import { FeatureRow } from "@/components/landing/FeatureRow";
 import { FinalCta } from "@/components/landing/FinalCta";
 import { Hero } from "@/components/landing/Hero";
@@ -31,6 +35,8 @@ export default function Home() {
             titleLead="Fast trading"
             titleAccent="in seconds"
             label="Trading"
+            screenshot={tokenScreen}
+            screenshotAlt="ChadWallet token screen with a live price chart and buy/sell controls"
             body="Buy and sell trending tokens before they trend. One tap, live charts, instant fills — no extensions, no seed phrase, no friction."
           />
           <FeatureRow
@@ -38,6 +44,8 @@ export default function Home() {
             titleLead="Follow"
             titleAccent="KOL traders"
             label="KOL feed"
+            screenshot={kolScreen}
+            screenshotAlt="ChadWallet KOL feed showing top traders' live buys and sells"
             reversed
             body="See exactly what the smartest traders ape into — the second they do it. Track wins, win-rates and live PnL. Copy the winners, dodge the rugs."
           />
@@ -46,6 +54,8 @@ export default function Home() {
             titleLead="Launch memecoins"
             titleAccent="in one tap"
             label="Launch"
+            screenshot={launchScreen}
+            screenshotAlt="ChadWallet one-tap memecoin launch form"
             body="Turn any meme, viral tweet, or shower thought into a coin. Name it, ticker it, launch it — live on Solana in seconds."
           />
           <FeatureRow
@@ -53,6 +63,8 @@ export default function Home() {
             titleLead="Track your assets"
             titleAccent="in one place"
             label="Portfolio"
+            screenshot={portfolioScreen}
+            screenshotAlt="ChadWallet portfolio screen with holdings and live PnL"
             reversed
             body="Your whole bag, live PnL, rewards, deposits and instant withdrawals — all on one screen. Non-custodial, always yours."
           />

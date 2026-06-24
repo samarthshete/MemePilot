@@ -1,3 +1,4 @@
+import tokenScreen from "../../../public/brand/app-store/token.png";
 import { DownloadButtons } from "./DownloadButtons";
 import { PhoneMockup } from "./PhoneMockup";
 
@@ -80,7 +81,13 @@ export function Hero() {
             </span>
           </div>
 
-          <PhoneMockup label="Trading" priority className="relative z-[1]" />
+          <PhoneMockup
+            label="Trading"
+            screenshot={tokenScreen}
+            alt="ChadWallet trading screen showing a live token price, chart and one-tap buy"
+            priority
+            className="relative z-[1]"
+          />
         </div>
       </div>
     </section>

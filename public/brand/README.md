@@ -1,25 +1,26 @@
 # public/brand — brand assets
 
-Drop the real ChadWallet brand assets here (pull the logo SVGs from the brand
-Drive folder). Components and the landing page will reference these exact paths,
-so use these filenames:
+Real ChadWallet assets live here. The landing page imports several of these
+directly (static imports → optimized by next/image).
 
-## Logo (required for Stage 1)
-- `logo-light.svg` — full logo for dark backgrounds (the default app surface, #020818)
-- `logo-dark.svg` — full logo for light backgrounds (e.g. the white splash, #FFFFFF)
-- `logo-mark.svg` — square icon/mark only (favicon, compact header) — optional but nice
+## Current layout
+- `logo/light.png` — black "chad" line-art on light (use on light/splash bg)
+- `logo/dark.png` — white "chad" line-art on dark (use on the app's dark bg)
+- `app-store/` — app screenshots (1242×2688): `token.png`, `kol.png`,
+  `launch.png`, `portfolio.png`, `discover.png`, `search.png`, `deposit.png`,
+  `splash.png`, `x.png`
+- `flow/` — multi-step flow screens
+- `video/chadwallet.mp4` — promo video
 
-## App store badges (required for Stage 1 download buttons)
-- `app-store-badge.svg` — official "Download on the App Store" badge
-- `google-play-badge.svg` — official "Get it on Google Play" badge
+## Used by Stage 1 landing
+- Hero + feature 01 → `app-store/token.png`
+- feature 02 → `app-store/kol.png` · feature 03 → `app-store/launch.png`
+- feature 04 → `app-store/portfolio.png`
 
-> Use the official badges from Apple / Google and follow their guidelines.
-
-## App screenshots (Stage 1 feature sections)
-- `screenshot-trade.png`
-- `screenshot-follow.png`
-- `screenshot-launch.png`
-- `screenshot-track.png`
-
-Prefer SVG for logos/badges and optimized PNG/WebP for screenshots. Keep file
-sizes small — these ship to every visitor.
+## Still ideal to add
+- **Transparent logo SVGs** (`logo-mark.svg` light + dark) — the header/footer
+  mark currently uses an on-brand CSS placeholder (`Logo.tsx`) because the PNG
+  logos have baked-in backgrounds and aren't sized for a small mark. Drop in a
+  transparent SVG and swap the one block in `Logo.tsx`.
+- **Official store badges** (`app-store-badge.svg`, `google-play-badge.svg`) —
+  `DownloadButtons.tsx` renders on-brand placeholder badges until then.
