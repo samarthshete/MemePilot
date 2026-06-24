@@ -78,6 +78,12 @@ Format: `ADR-NNN — Title` · Status · Date · Context · Decision · Conseque
 - **Decision:** Design screens in Claude Design (ingesting our repo tokens + app screenshots), hand the bundle off natively to Claude Code, which implements the frontend code and all backend. Claude Code is the single source of truth for the codebase and enforces CLAUDE.md.
 - **Consequences:** Design-led for Stages 1 and 4; tighter brand fidelity; one extra tool + usage to manage. The handoff is a visual spec, not an override of the architecture rules.
 
+### ADR-013 — Stage 1 landing: extra surface tokens, glow utilities, placeholder assets
+- **Status:** Accepted · **Date:** 2026-06-24
+- **Context:** The locked landing design uses dark-navy shades and translucent neon greens beyond the 8 base brand tokens, plus colored "glow" shadows. Real brand assets (screenshots, logo SVG, store badges) are not in `public/brand/` yet. Tailwind v4's arbitrary `shadow-[…]` does not reliably combine with `shadow-<color>`.
+- **Decision:** (1) Add two `@theme` tokens — `--color-cw-surface-2` (#040b1d, sunken bars: tickers/footer) and `--color-cw-bezel` (#161e34, phone frame). All other extra shades are expressed as opacity modifiers on existing tokens (`bg-cw-green/10`, `border-white/6`) — no raw hexes in components. (2) Express neon glows as `cw-glow-*` utility classes in globals.css using `color-mix(... var(--color-cw-green) ...)`, so glow color still traces to a token. (3) Ship on-brand CSS placeholders for phones/logo behind a one-prop/one-file swap seam (`PhoneMockup` `screenshot` prop, `Logo`); generate the OG image dynamically via `next/og` instead of committing a binary. (4) Scroll-reveal is DOM-driven (no React state) and fully gated by `prefers-reduced-motion`, so no-JS/reduced-motion users always see content.
+- **Consequences:** Strictly on-brand with no stray hexes. Dropping real assets later is a localized change (no layout shift, dimensions already reserved). The OG card is real but generic until brand art exists. Raw hex literals remain only inside `opengraph-image.tsx` (satori requires literal styles) — acceptable, it is a generated image, not page UI.
+
 ---
 
 ## Proposed / open (not yet decided)

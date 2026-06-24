@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ background:#020818; color:#fff; font-family:'Archivo',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+  @keyframes tickerScroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+  @keyframes livePulse{ 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:.25; transform:scale(.6); } }
+  @keyframes glowPulse{ 0%,100%{ opacity:.45; } 50%{ opacity:.9; } }
+  @keyframes floaty{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-14px); } }
+  @keyframes floatySlow{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(10px); } }
+</style>
+</helmet>
+
+<div style="position:relative; width:100%; overflow:hidden;">
+
+<!-- ============ TOP TICKER ============ -->
+<div style="position:relative; z-index:30; display:flex; align-items:stretch; height:46px; background:#040b1d; border-bottom:1px solid rgba(17,254,156,.18);">
+  <div style="flex:0 0 auto; display:flex; align-items:center; gap:8px; padding:0 18px; background:#020818; border-right:1px solid rgba(17,254,156,.22);">
+    <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#11FE9C; box-shadow:0 0 10px #11FE9C; animation:livePulse 1.4s ease-in-out infinite;"></span>
+    <span style="font-family:'Space Mono',monospace; font-weight:700; font-size:12px; letter-spacing:.18em; color:#11FE9C;">LIVE</span>
+  </div>
+  <div style="position:relative; flex:1 1 auto; overflow:hidden;">
+    <div style="display:flex; width:max-content; align-items:center; animation:tickerScroll 42s linear infinite;">
+      <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="8">
+        <div style="display:flex; align-items:center; gap:9px; padding:0 22px; border-right:1px solid rgba(255,255,255,.05); height:46px; flex:0 0 auto; white-space:nowrap;">
+          <span style="display:grid; place-items:center; width:22px; height:22px; border-radius:50%; background:#0A1122; border:1px solid rgba(17,254,156,.35); font-family:'Space Mono',monospace; font-size:9px; font-weight:700; color:#cfe; letter-spacing:-.02em;">{{ t.tag }}</span>
+          <span style="font-family:'Space Mono',monospace; font-weight:700; font-size:13px; color:#fff;">{{ t.sym }}</span>
+          <span style="font-family:'Space Mono',monospace; font-size:13px; color:#8A93A6;">{{ t.price }}</span>
+          <span style="font-family:'Space Mono',monospace; font-weight:700; font-size:13px; color:{{ t.col }};">{{ t.arr }} {{ t.chg }}</span>
+        </div>
+      </sc-for>
+      <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="8">
+        <div style="display:flex; align-items:center; gap:9px; padding:0 22px; border-right:1px solid rgba(255,255,255,.05); height:46px; flex:0 0 auto; white-space:nowrap;">
+          <span style="display:grid; place-items:center; width:22px; height:22px; border-radius:50%; background:#0A1122; border:1px solid rgba(17,254,156,.35); font-family:'Space Mono',monospace; font-size:9px; font-weight:700; color:#cfe; letter-spacing:-.02em;">{{ t.tag }}</span>
+          <span style="font-family:'Space Mono',monospace; font-weight:700; font-size:13px; color:#fff;">{{ t.sym }}</span>
+          <span style="font-family:'Space Mono',monospace; font-size:13px; color:#8A93A6;">{{ t.price }}</span>
+          <span style="font-family:'Space Mono',monospace; font-weight:700; font-size:13px; color:{{ t.col }};">{{ t.arr }} {{ t.chg }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+
+<!-- ============ NAV ============ -->
+<nav style="position:sticky; top:0; z-index:40; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:13px clamp(14px,4vw,48px); background:rgba(2,8,24,.78); backdrop-filter:blur(16px); border-bottom:1px solid rgba(255,255,255,.06);">
+  <div style="display:flex; align-items:center; gap:11px;">
+    <span style="position:relative; display:grid; place-items:center; width:36px; height:36px; border-radius:11px; background:#11FE9C; box-shadow:0 0 22px rgba(17,254,156,.45);">
+      <span style="position:absolute; top:10px; display:flex; gap:5px;">
+        <span style="width:9px; height:7px; border-radius:3px; background:#041018;"></span>
+        <span style="width:9px; height:7px; border-radius:3px; background:#041018;"></span>
+      </span>
+    </span>
+    <span style="font-weight:900; font-size:19px; letter-spacing:-.03em;">ChadWallet</span>
+  </div>
+  <div style="display:flex; align-items:center; gap:9px; flex:0 0 auto;">
+    <a href="#" style="font-weight:700; font-size:14px; white-space:nowrap; color:#fff; text-decoration:none; padding:10px 15px; border-radius:999px; border:1px solid rgba(255,255,255,.16);" style-hover="border-color:rgba(255,255,255,.4);">Sign in</a>
+    <a href="{{ appStore }}" target="_blank" style="font-weight:800; font-size:14px; white-space:nowrap; color:#041018; text-decoration:none; padding:11px 18px; border-radius:999px; background:#11FE9C; box-shadow:0 0 24px rgba(17,254,156,.4);" style-hover="box-shadow:0 0 36px rgba(17,254,156,.7);">Download</a>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<section style="position:relative; overflow:hidden;">
+  <sc-if value="{{ glow }}" hint-placeholder-val="{{ true }}">
+    <div style="position:absolute; top:-120px; right:-60px; width:620px; height:620px; border-radius:50%; background:radial-gradient(circle, rgba(17,254,156,.20), transparent 65%); filter:blur(40px); animation:glowPulse 6s ease-in-out infinite; pointer-events:none;"></div>
+    <div style="position:absolute; bottom:-160px; left:-120px; width:520px; height:520px; border-radius:50%; background:radial-gradient(circle, rgba(17,254,156,.10), transparent 65%); filter:blur(40px); pointer-events:none;"></div>
+  </sc-if>
+  <div style="position:relative; max-width:1200px; margin:0 auto; padding:clamp(40px,7vw,90px) clamp(18px,5vw,48px) clamp(60px,8vw,110px); display:flex; flex-wrap:wrap; align-items:center; gap:clamp(36px,5vw,64px);">
+    <div style="flex:1 1 440px; min-width:300px;">
+      <span style="display:inline-flex; align-items:center; gap:8px; padding:7px 14px; border-radius:999px; background:rgba(17,254,156,.10); border:1px solid rgba(17,254,156,.30); font-weight:700; font-size:12px; letter-spacing:.06em; color:#11FE9C; text-transform:uppercase;">
+        <span style="width:7px; height:7px; border-radius:50%; background:#11FE9C; animation:livePulse 1.4s ease-in-out infinite;"></span> Live on Solana
+      </span>
+      <h1 style="margin:22px 0 0; font-weight:900; font-size:clamp(40px,5.6vw,72px); line-height:.96; letter-spacing:-.035em; text-wrap:balance;">Find the next <span style="color:#11FE9C; text-shadow:0 0 40px rgba(17,254,156,.55);">100x</span> memecoins here</h1>
+      <p style="margin:22px 0 0; max-width:480px; font-size:clamp(16px,1.5vw,19px); line-height:1.5; color:#8A93A6; font-weight:500;">Get ChadWallet today. Never miss the next breakout. Discover, follow the smartest traders, and ape in seconds — no seed phrase.</p>
+
+      <!-- download block -->
+      <div style="margin-top:30px; position:relative; padding:20px; border-radius:22px; background:linear-gradient(180deg, rgba(17,254,156,.10), rgba(17,254,156,.03)); border:1px solid rgba(17,254,156,.30); box-shadow:0 0 50px rgba(17,254,156,.14);">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
+          <span style="font-family:'Space Mono',monospace; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#11FE9C; font-weight:700;">Download the app</span>
+          <span style="font-size:12px; color:#8A93A6; font-weight:600;">iOS · Android</span>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:12px;">
+          <a href="{{ appStore }}" target="_blank" style="flex:1 1 180px; display:flex; align-items:center; gap:12px; background:#11FE9C; border-radius:15px; padding:13px 18px; text-decoration:none; box-shadow:0 10px 30px rgba(17,254,156,.30);" style-hover="transform:translateY(-2px);">
+            <span style="display:grid; grid-template-columns:1fr 1fr; gap:3px; width:30px; height:30px; padding:7px; background:#041018; border-radius:9px;"><span style="background:#11FE9C; border-radius:2px;"></span><span style="background:#11FE9C; border-radius:2px;"></span><span style="background:#11FE9C; border-radius:2px;"></span><span style="background:#11FE9C; border-radius:2px;"></span></span>
+            <span style="display:flex; flex-direction:column; line-height:1.05;"><span style="font-size:11px; font-weight:600; color:#04361f;">Download on the</span><span style="font-size:18px; font-weight:900; color:#041018; letter-spacing:-.03em;">App Store</span></span>
+          </a>
+          <a href="{{ play }}" target="_blank" style="flex:1 1 180px; display:flex; align-items:center; gap:12px; background:#0A1122; border:1px solid rgba(255,255,255,.12); border-radius:15px; padding:13px 18px; text-decoration:none;" style-hover="border-color:#11FE9C; transform:translateY(-2px);">
+            <span style="display:grid; place-items:center; width:30px; height:30px; background:#11FE9C; border-radius:9px;"><span style="width:0; height:0; border-left:12px solid #041018; border-top:7px solid transparent; border-bottom:7px solid transparent; margin-left:4px;"></span></span>
+            <span style="display:flex; flex-direction:column; line-height:1.05;"><span style="font-size:11px; font-weight:600; color:#8A93A6;">Get it on</span><span style="font-size:18px; font-weight:900; color:#fff; letter-spacing:-.03em;">Google Play</span></span>
+          </a>
+        </div>
+      </div>
+      <div style="margin-top:16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <a href="#" style="font-weight:700; font-size:14px; color:#fff; text-decoration:none; padding:11px 20px; border-radius:999px; border:1px solid rgba(255,255,255,.18);" style-hover="border-color:rgba(255,255,255,.45);">Sign in with Apple or Google →</a>
+        <span style="font-size:13px; color:#8A93A6; font-weight:500;">No seed phrase · You own your crypto</span>
+      </div>
+    </div>
+
+    <!-- phone -->
+    <div style="flex:1 1 320px; min-width:280px; display:flex; justify-content:center; position:relative;">
+      <div style="position:absolute; top:8%; left:2%; z-index:3; display:flex; align-items:center; gap:7px; padding:9px 14px; border-radius:14px; background:rgba(17,254,156,.14); border:1px solid rgba(17,254,156,.4); backdrop-filter:blur(8px); animation:floaty 5s ease-in-out infinite;">
+        <span style="font-family:'Space Mono',monospace; font-weight:700; color:#11FE9C; font-size:15px;">▲ +434%</span>
+      </div>
+      <div style="position:absolute; bottom:14%; right:1%; z-index:3; display:flex; flex-direction:column; padding:11px 16px; border-radius:14px; background:rgba(10,17,34,.85); border:1px solid rgba(255,255,255,.12); backdrop-filter:blur(8px); animation:floatySlow 6s ease-in-out infinite;">
+        <span style="font-size:10px; color:#8A93A6; font-weight:600; letter-spacing:.08em;">MARKET CAP</span>
+        <span style="font-family:'Space Mono',monospace; font-weight:700; color:#fff; font-size:18px;">$7.63M</span>
+      </div>
+      <div style="position:relative; width:clamp(248px,30vw,340px); padding:11px; border-radius:46px; background:linear-gradient(155deg,#161e34,#06091a); box-shadow:0 50px 90px rgba(0,0,0,.7), inset 0 0 0 1.5px rgba(255,255,255,.06), 0 0 70px rgba(17,254,156,.16);">
+        <img src="images/scr-token.png" alt="ChadWallet token trading screen" style="display:block; width:100%; border-radius:36px;">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section style="position:relative; max-width:1200px; margin:0 auto; padding:clamp(50px,7vw,90px) clamp(18px,5vw,48px) clamp(20px,3vw,40px);">
+  <div style="text-align:center; margin-bottom:clamp(40px,5vw,64px);">
+    <span style="font-family:'Space Mono',monospace; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:#11FE9C; font-weight:700;">Everything degens need</span>
+    <h2 style="margin:14px 0 0; font-weight:900; font-size:clamp(30px,4.4vw,52px); line-height:1; letter-spacing:-.035em;">One app. Every edge.</h2>
+  </div>
+
+  <!-- feature 1 : text / phone -->
+  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); align-items:center; gap:clamp(28px,4vw,56px); padding:clamp(28px,4vw,48px) 0;">
+    <div>
+      <span style="font-family:'Space Mono',monospace; font-size:13px; font-weight:700; color:#11FE9C;">01</span>
+      <h3 style="margin:10px 0 0; font-weight:900; font-size:clamp(28px,3.6vw,46px); line-height:1; letter-spacing:-.03em;">Fast trading <span style="color:#11FE9C;">in seconds</span></h3>
+      <p style="margin:16px 0 0; max-width:420px; font-size:clamp(15px,1.4vw,18px); line-height:1.55; color:#8A93A6; font-weight:500;">Buy and sell trending tokens before they trend. One tap, live charts, instant fills — no extensions, no seed phrase, no friction.</p>
+    </div>
+    <div style="display:flex; justify-content:center;">
+      <div style="width:clamp(220px,26vw,300px); padding:10px; border-radius:42px; background:linear-gradient(155deg,#161e34,#06091a); box-shadow:0 40px 70px rgba(0,0,0,.6), inset 0 0 0 1.5px rgba(255,255,255,.06); transition:transform .3s;" style-hover="transform:translateY(-8px);">
+        <img src="images/scr-token.png" alt="Trade tokens fast" style="display:block; width:100%; border-radius:33px;">
+      </div>
+    </div>
+  </div>
+
+  <!-- feature 2 : phone / text (reversed on desktop) -->
+  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); align-items:center; gap:clamp(28px,4vw,56px); padding:clamp(28px,4vw,48px) 0;">
+    <div style="display:flex; justify-content:center; order:2;">
+      <div style="width:clamp(220px,26vw,300px); padding:10px; border-radius:42px; background:linear-gradient(155deg,#161e34,#06091a); box-shadow:0 40px 70px rgba(0,0,0,.6), inset 0 0 0 1.5px rgba(255,255,255,.06); transition:transform .3s;" style-hover="transform:translateY(-8px);">
+        <img src="images/scr-kol-feed.png" alt="Follow KOL traders" style="display:block; width:100%; border-radius:33px;">
+      </div>
+    </div>
+    <div style="order:1;">
+      <span style="font-family:'Space Mono',monospace; font-size:13px; font-weight:700; color:#11FE9C;">02</span>
+      <h3 style="margin:10px 0 0; font-weight:900; font-size:clamp(28px,3.6vw,46px); line-height:1; letter-spacing:-.03em;">Follow <span style="color:#11FE9C;">KOL traders</span></h3>
+      <p style="margin:16px 0 0; max-width:420px; font-size:clamp(15px,1.4vw,18px); line-height:1.55; color:#8A93A6; font-weight:500;">See exactly what the smartest traders ape into — the second they do it. Track wins, win-rates and live PnL. Copy the winners, dodge the rugs.</p>
+    </div>
+  </div>
+
+  <!-- feature 3 : text / phone -->
+  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); align-items:center; gap:clamp(28px,4vw,56px); padding:clamp(28px,4vw,48px) 0;">
+    <div>
+      <span style="font-family:'Space Mono',monospace; font-size:13px; font-weight:700; color:#11FE9C;">03</span>
+      <h3 style="margin:10px 0 0; font-weight:900; font-size:clamp(28px,3.6vw,46px); line-height:1; letter-spacing:-.03em;">Launch memecoins <span style="color:#11FE9C;">in one tap</span></h3>
+      <p style="margin:16px 0 0; max-width:420px; font-size:clamp(15px,1.4vw,18px); line-height:1.55; color:#8A93A6; font-weight:500;">Turn any meme, viral tweet, or shower thought into a coin. Name it, ticker it, launch it — live on Solana in seconds.</p>
+    </div>
+    <div style="display:flex; justify-content:center;">
+      <div style="width:clamp(220px,26vw,300px); padding:10px; border-radius:42px; background:linear-gradient(155deg,#161e34,#06091a); box-shadow:0 40px 70px rgba(0,0,0,.6), inset 0 0 0 1.5px rgba(255,255,255,.06); transition:transform .3s;" style-hover="transform:translateY(-8px);">
+        <img src="images/scr-launch-form.png" alt="Launch a memecoin" style="display:block; width:100%; border-radius:33px;">
+      </div>
+    </div>
+  </div>
+
+  <!-- feature 4 : phone / text -->
+  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); align-items:center; gap:clamp(28px,4vw,56px); padding:clamp(28px,4vw,48px) 0;">
+    <div style="display:flex; justify-content:center; order:2;">
+      <div style="width:clamp(220px,26vw,300px); padding:10px; border-radius:42px; background:linear-gradient(155deg,#161e34,#06091a); box-shadow:0 40px 70px rgba(0,0,0,.6), inset 0 0 0 1.5px rgba(255,255,255,.06); transition:transform .3s;" style-hover="transform:translateY(-8px);">
+        <img src="images/scr-portfolio.png" alt="Track your assets" style="display:block; width:100%; border-radius:33px;">
+      </div>
+    </div>
+    <div style="order:1;">
+      <span style="font-family:'Space Mono',monospace; font-size:13px; font-weight:700; color:#11FE9C;">04</span>
+      <h3 style="margin:10px 0 0; font-weight:900; font-size:clamp(28px,3.6vw,46px); line-height:1; letter-spacing:-.03em;">Track your assets <span style="color:#11FE9C;">in one place</span></h3>
+      <p style="margin:16px 0 0; max-width:420px; font-size:clamp(15px,1.4vw,18px); line-height:1.55; color:#8A93A6; font-weight:500;">Your whole bag, live PnL, rewards, deposits and instant withdrawals — all on one screen. Non-custodial, always yours.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRUST STRIP ============ -->
+<section style="max-width:1200px; margin:clamp(20px,3vw,40px) auto; padding:0 clamp(18px,5vw,48px);">
+  <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:clamp(16px,3vw,40px); padding:clamp(22px,3vw,30px) clamp(24px,4vw,44px); border-radius:24px; background:#0A1122; border:1px solid rgba(255,255,255,.07);">
+    <div style="display:flex; align-items:center; gap:13px;">
+      <span style="display:grid; place-items:center; width:42px; height:42px; border-radius:12px; background:rgba(17,254,156,.12); border:1px solid rgba(17,254,156,.35);">
+        <span style="width:16px; height:18px; border-radius:4px 4px 7px 7px; border:2px solid #11FE9C; border-top:none; position:relative;"><span style="position:absolute; top:-9px; left:1px; width:10px; height:10px; border:2px solid #11FE9C; border-bottom:none; border-radius:6px 6px 0 0;"></span></span>
+      </span>
+      <span style="font-weight:800; font-size:clamp(17px,1.8vw,22px); letter-spacing:-.02em;">Non-custodial — <span style="color:#11FE9C;">you own your crypto.</span></span>
+    </div>
+    <span style="width:1px; height:34px; background:rgba(255,255,255,.12);"></span>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span style="display:flex; flex-direction:column; gap:3px; transform:skewX(-18deg);">
+        <span style="width:24px; height:5px; border-radius:2px; background:#11FE9C;"></span>
+        <span style="width:24px; height:5px; border-radius:2px; background:#11FE9C; opacity:.7;"></span>
+        <span style="width:24px; height:5px; border-radius:2px; background:#11FE9C; opacity:.45;"></span>
+      </span>
+      <span style="font-weight:700; font-size:15px; color:#8A93A6;">Built on Solana</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FINAL CTA ============ -->
+<section style="position:relative; overflow:hidden; margin-top:clamp(40px,6vw,80px);">
+  <sc-if value="{{ glow }}" hint-placeholder-val="{{ true }}">
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:720px; height:480px; border-radius:50%; background:radial-gradient(circle, rgba(17,254,156,.18), transparent 60%); filter:blur(50px); animation:glowPulse 6s ease-in-out infinite; pointer-events:none;"></div>
+  </sc-if>
+  <div style="position:relative; max-width:900px; margin:0 auto; padding:clamp(56px,8vw,110px) clamp(18px,5vw,48px); text-align:center;">
+    <h2 style="margin:0 auto; font-weight:900; font-size:clamp(34px,6vw,72px); line-height:.92; letter-spacing:-.04em; text-transform:uppercase; max-width:14ch;">Ready to find the next <span style="color:#11FE9C; text-shadow:0 0 50px rgba(17,254,156,.6);">100x?</span></h2>
+    <p style="margin:20px auto 0; max-width:460px; font-size:clamp(16px,1.6vw,20px); color:#8A93A6; font-weight:500;">Download ChadWallet and start trading in seconds.</p>
+    <div style="margin:30px auto 0; max-width:520px; display:flex; flex-wrap:wrap; justify-content:center; gap:12px;">
+      <a href="{{ appStore }}" target="_blank" style="flex:1 1 200px; display:flex; align-items:center; justify-content:center; gap:12px; background:#11FE9C; border-radius:16px; padding:15px 20px; text-decoration:none; box-shadow:0 12px 36px rgba(17,254,156,.34);" style-hover="transform:translateY(-2px);">
+        <span style="display:grid; grid-template-columns:1fr 1fr; gap:3px; width:30px; height:30px; padding:7px; background:#041018; border-radius:9px;"><span style="background:#11FE9C; border-radius:2px;"></span><span style="background:#11FE9C; border-radius:2px;"></span><span style="background:#11FE9C; border-radius:2px;"></span><span style="background:#11FE9C; border-radius:2px;"></span></span>
+        <span style="display:flex; flex-direction:column; line-height:1.05;"><span style="font-size:11px; font-weight:600; color:#04361f;">Download on the</span><span style="font-size:18px; font-weight:900; color:#041018; letter-spacing:-.03em;">App Store</span></span>
+      </a>
+      <a href="{{ play }}" target="_blank" style="flex:1 1 200px; display:flex; align-items:center; justify-content:center; gap:12px; background:#0A1122; border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:15px 20px; text-decoration:none;" style-hover="border-color:#11FE9C; transform:translateY(-2px);">
+        <span style="display:grid; place-items:center; width:30px; height:30px; background:#11FE9C; border-radius:9px;"><span style="width:0; height:0; border-left:12px solid #041018; border-top:7px solid transparent; border-bottom:7px solid transparent; margin-left:4px;"></span></span>
+        <span style="display:flex; flex-direction:column; line-height:1.05;"><span style="font-size:11px; font-weight:600; color:#8A93A6;">Get it on</span><span style="font-size:18px; font-weight:900; color:#fff; letter-spacing:-.03em;">Google Play</span></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BOTTOM TICKER ============ -->
+<div style="position:relative; z-index:5; display:flex; align-items:stretch; height:46px; background:#040b1d; border-top:1px solid rgba(17,254,156,.18); border-bottom:1px solid rgba(17,254,156,.18);">
+  <div style="flex:0 0 auto; display:flex; align-items:center; gap:8px; padding:0 18px; background:#020818; border-right:1px solid rgba(17,254,156,.22);">
+    <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#11FE9C; box-shadow:0 0 10px #11FE9C; animation:livePulse 1.4s ease-in-out infinite;"></span>
+    <span style="font-family:'Space Mono',monospace; font-weight:700; font-size:12px; letter-spacing:.18em; color:#11FE9C;">LIVE</span>
+  </div>
+  <div style="position:relative; flex:1 1 auto; overflow:hidden;">
+    <div style="display:flex; width:max-content; align-items:center; animation:tickerScroll 38s linear infinite;">
+      <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="8">
+        <div style="display:flex; align-items:center; gap:9px; padding:0 22px; border-right:1px solid rgba(255,255,255,.05); height:46px; flex:0 0 auto; white-space:nowrap;">
+          <span style="display:grid; place-items:center; width:22px; height:22px; border-radius:50%; background:#0A1122; border:1px solid rgba(17,254,156,.35); font-family:'Space Mono',monospace; font-size:9px; font-weight:700; color:#cfe;">{{ t.tag }}</span>
+          <span style="font-family:'Space Mono',monospace; font-weight:700; font-size:13px; color:#fff;">{{ t.sym }}</span>
+          <span style="font-family:'Space Mono',monospace; font-size:13px; color:#8A93A6;">{{ t.price }}</span>
+          <span style="font-family:'Space Mono',monospace; font-weight:700; font-size:13px; color:{{ t.col }};">{{ t.arr }} {{ t.chg }}</span>
+        </div>
+      </sc-for>
+      <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="8">
+        <div style="display:flex; align-items:center; gap:9px; padding:0 22px; border-right:1px solid rgba(255,255,255,.05); height:46px; flex:0 0 auto; white-space:nowrap;">
+          <span style="display:grid; place-items:center; width:22px; height:22px; border-radius:50%; background:#0A1122; border:1px solid rgba(17,254,156,.35); font-family:'Space Mono',monospace; font-size:9px; font-weight:700; color:#cfe;">{{ t.tag }}</span>
+          <span style="font-family:'Space Mono',monospace; font-weight:700; font-size:13px; color:#fff;">{{ t.sym }}</span>
+          <span style="font-family:'Space Mono',monospace; font-size:13px; color:#8A93A6;">{{ t.price }}</span>
+          <span style="font-family:'Space Mono',monospace; font-weight:700; font-size:13px; color:{{ t.col }};">{{ t.arr }} {{ t.chg }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+
+<!-- ============ FOOTER ============ -->
+<footer style="border-top:1px solid rgba(255,255,255,.06); background:#040b1d;">
+  <div style="max-width:1200px; margin:0 auto; padding:clamp(40px,5vw,64px) clamp(18px,5vw,48px) clamp(24px,3vw,36px); display:flex; flex-wrap:wrap; gap:32px; justify-content:space-between; align-items:flex-start;">
+    <div style="max-width:340px;">
+      <div style="display:flex; align-items:center; gap:11px;">
+        <span style="position:relative; display:grid; place-items:center; width:34px; height:34px; border-radius:10px; background:#11FE9C; box-shadow:0 0 20px rgba(17,254,156,.4);">
+          <span style="position:absolute; top:9px; display:flex; gap:5px;"><span style="width:8px; height:6px; border-radius:3px; background:#041018;"></span><span style="width:8px; height:6px; border-radius:3px; background:#041018;"></span></span>
+        </span>
+        <span style="font-weight:900; font-size:18px; letter-spacing:-.03em;">ChadWallet</span>
+      </div>
+      <p style="margin:16px 0 0; font-size:14px; line-height:1.5; color:#8A93A6; font-weight:500;">The social-first Solana memecoin wallet. Find the next 100x, follow the smartest traders, and own your crypto.</p>
+      <div style="display:flex; gap:10px; margin-top:18px;">
+        <a href="{{ x }}" target="_blank" style="display:grid; place-items:center; width:40px; height:40px; border-radius:11px; background:#0A1122; border:1px solid rgba(255,255,255,.1); color:#fff; text-decoration:none; font-weight:900; font-size:15px;" style-hover="border-color:#11FE9C;">𝕏</a>
+        <a href="#" target="_blank" style="display:grid; place-items:center; width:40px; height:40px; border-radius:11px; background:#0A1122; border:1px solid rgba(255,255,255,.1); color:#fff; text-decoration:none; font-weight:700; font-size:12px;" style-hover="border-color:#11FE9C;">Discord</a>
+      </div>
+    </div>
+    <div style="display:flex; gap:clamp(36px,5vw,72px); flex-wrap:wrap;">
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <span style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:#8A93A6;">Product</span>
+        <a href="#" style="font-size:14px; font-weight:600; color:#fff; text-decoration:none;" style-hover="color:#11FE9C;">Trade</a>
+        <a href="#" style="font-size:14px; font-weight:600; color:#fff; text-decoration:none;" style-hover="color:#11FE9C;">KOL traders</a>
+        <a href="#" style="font-size:14px; font-weight:600; color:#fff; text-decoration:none;" style-hover="color:#11FE9C;">Launch</a>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <span style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:#8A93A6;">Legal</span>
+        <a href="#" style="font-size:14px; font-weight:600; color:#fff; text-decoration:none;" style-hover="color:#11FE9C;">Privacy</a>
+        <a href="#" style="font-size:14px; font-weight:600; color:#fff; text-decoration:none;" style-hover="color:#11FE9C;">Terms</a>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px; align-items:flex-start;">
+        <span style="font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:#8A93A6;">Get the app</span>
+        <a href="{{ appStore }}" target="_blank" style="font-weight:800; font-size:14px; color:#041018; text-decoration:none; padding:12px 22px; border-radius:999px; background:#11FE9C; box-shadow:0 0 24px rgba(17,254,156,.4);" style-hover="box-shadow:0 0 38px rgba(17,254,156,.7);">Download ↓</a>
+      </div>
+    </div>
+  </div>
+  <div style="max-width:1200px; margin:0 auto; padding:18px clamp(18px,5vw,48px); border-top:1px solid rgba(255,255,255,.06); display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:center;">
+    <span style="font-size:13px; color:#8A93A6; font-weight:500;">© {{ year }} ChadWallet. All rights reserved.</span>
+    <span style="font-size:12px; color:#5b667c; font-weight:500;">Memecoins are risky. Trade at your own risk. Not financial advice.</span>
+  </div>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;glow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  renderVals(){
+    const GREEN = '#11FE9C', RED = '#FF4334';
+    const raw = [
+      { tag:'UNC', sym:'unc',    price:'$0.007801',  chg:'22.90%',  up:true  },
+      { tag:'PEE', sym:'PEEPA',  price:'$0.0\u20835151', chg:'48.46%',  up:false },
+      { tag:'AST', sym:'ASAT',   price:'$0.00006086',chg:'434.20%', up:true  },
+      { tag:'HI',  sym:'HIGHER', price:'$0.002810',  chg:'112.40%', up:true  },
+      { tag:'DMB', sym:'DUMB',   price:'$0.002894',  chg:'26.68%',  up:false },
+      { tag:'JRD', sym:'JARED',  price:'$0.0\u20832283', chg:'754.70%', up:true  },
+      { tag:'TRL', sym:'TROLL',  price:'$0.0204',    chg:'4.09%',   up:true  },
+      { tag:'BLF', sym:'BELIEF', price:'$0.0214',    chg:'14.53%',  up:true  },
+      { tag:'MKY', sym:'MONKEY', price:'$0.0\u20838674', chg:'22.74x',  up:true  },
+      { tag:'BUL', sym:'BULL',   price:'$0.005698',  chg:'0.71%',   up:true  },
+      { tag:'LOL', sym:'LOL',    price:'$0.00226',   chg:'24.34%',  up:true  },
+      { tag:'SHB', sym:'SHIBA',  price:'$0.0\u20835275', chg:'44.01%',  up:false },
+    ];
+    const tokens = raw.map(t => ({
+      ...t,
+      col: t.up ? GREEN : RED,
+      arr: t.up ? '\u25B2' : '\u25BC',
+    }));
+
+    return {
+      tokens,
+      glow: this.props.glow !== false,
+      appStore: 'https://apps.apple.com/us/app/chadwallet/id6757367474',
+      play: 'https://play.google.com/store/apps/details?id=xyz.chadwallet.www',
+      x: 'https://x.com',
+      year: 2026,
+    };
+  }
+}
+</script>
+</body>
+</html>

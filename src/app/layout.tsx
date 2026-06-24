@@ -1,21 +1,45 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Archivo, Space_Mono } from "next/font/google";
+import { publicEnv } from "@/lib/env";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Archivo = display/body (variable font); Space Mono = numerals/tickers.
+// next/font self-hosts both with `display: swap` → no layout shift, no FOUT flash.
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const spaceMono = Space_Mono({
+  variable: "--font-space-mono",
   subsets: ["latin"],
+  weight: ["400", "700"],
+  display: "swap",
 });
+
+const siteUrl = publicEnv.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const title = "ChadWallet — find the next 100x memecoins";
+const description =
+  "Get ChadWallet: the social-first, non-custodial Solana memecoin wallet. Discover trending coins, follow the smartest traders, and ape in seconds — no seed phrase.";
 
 export const metadata: Metadata = {
-  title: "ChadWallet — social-first Solana memecoin wallet",
-  description:
-    "ChadWallet: trade Solana memecoins from a non-custodial, social-first wallet. Web companion to the mobile app.",
+  metadataBase: new URL(siteUrl),
+  title,
+  description,
+  applicationName: "ChadWallet",
+  openGraph: {
+    type: "website",
+    url: siteUrl,
+    siteName: "ChadWallet",
+    title,
+    description,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
 };
 
 export const viewport: Viewport = {
@@ -30,9 +54,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${archivo.variable} ${spaceMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-cw-bg text-cw-text">
+      <body className="flex min-h-full flex-col overflow-x-clip bg-cw-bg font-sans text-cw-text">
         {children}
       </body>
     </html>

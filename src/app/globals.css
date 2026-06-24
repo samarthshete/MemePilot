@@ -4,19 +4,24 @@
  * ChadWallet brand tokens (see CLAUDE.md "Brand tokens").
  * Defined in @theme so they generate Tailwind utilities — e.g. `bg-cw-bg`,
  * `text-cw-green`, `border-cw-surface` — and are also available as CSS vars.
+ * Translucent variants (e.g. neon borders, white hairlines) are expressed with
+ * Tailwind's opacity modifier (`border-cw-green/30`, `border-white/6`) rather
+ * than raw rgba, so every color still traces back to a token.
  */
 @theme {
   --color-cw-bg: #020818; /* near-black navy app background */
   --color-cw-surface: #0a1122; /* cards / elevated panels */
+  --color-cw-surface-2: #040b1d; /* sunken bars: tickers + footer */
+  --color-cw-bezel: #161e34; /* phone-mockup frame highlight */
   --color-cw-green: #11fe9c; /* PRIMARY: buy, CTAs, positive % */
-  --color-cw-green-press: #10e48c; /* pressed / hover */
+  --color-cw-green-press: #10e48c; /* pressed/hover */
   --color-cw-red: #ff4334; /* sell, negative %, down */
   --color-cw-text: #ffffff; /* primary text */
   --color-cw-text-muted: #8a93a6; /* secondary text */
   --color-cw-splash-bg: #ffffff; /* splash background */
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-archivo);
+  --font-mono: var(--font-space-mono);
 }
 
 /* Dark base: the whole app is dark, high-contrast by default. */
@@ -27,5 +32,130 @@ body {
 }
 
 body {
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-archivo), system-ui, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ----------------------------------------------------------------------------
+ * Motion. All GPU-friendly (transform/opacity only) and fully disabled under
+ * prefers-reduced-motion. Class-based (not Tailwind animate utilities) so the
+ * ticker can pause on hover and the reveal can be JS-gated.
+ * ------------------------------------------------------------------------- */
+@keyframes cw-ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes cw-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.25;
+    transform: scale(0.55);
+  }
+}
+@keyframes cw-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+@keyframes cw-floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+@keyframes cw-floaty-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(10px);
+  }
+}
+
+@layer utilities {
+  /* Seamless marquee: the track holds the list twice and shifts -50%. */
+  .cw-ticker-track {
+    animation: cw-ticker var(--cw-ticker-duration, 42s) linear infinite;
+  }
+  .cw-ticker-viewport:hover .cw-ticker-track,
+  .cw-ticker-viewport:focus-within .cw-ticker-track {
+    animation-play-state: paused;
+  }
+  .cw-live-dot {
+    animation: cw-pulse 1.4s ease-in-out infinite;
+  }
+  .cw-glow {
+    animation: cw-glow 6s ease-in-out infinite;
+  }
+  .cw-floaty {
+    animation: cw-floaty 5s ease-in-out infinite;
+  }
+  .cw-floaty-slow {
+    animation: cw-floaty-slow 6s ease-in-out infinite;
+  }
+  /* Neon green glows. Kept here (not inline) because Tailwind's arbitrary
+   * `shadow-[…]` doesn't combine with `shadow-<color>` reliably. All colors
+   * trace back to the --color-cw-green token via color-mix. */
+  .cw-glow-sm {
+    box-shadow: 0 0 10px var(--color-cw-green);
+  }
+  .cw-glow-mark {
+    box-shadow: 0 0 22px color-mix(in srgb, var(--color-cw-green) 45%, transparent);
+  }
+  .cw-glow-badge {
+    box-shadow: 0 10px 30px color-mix(in srgb, var(--color-cw-green) 30%, transparent);
+  }
+  .cw-glow-panel {
+    box-shadow: 0 0 50px color-mix(in srgb, var(--color-cw-green) 15%, transparent);
+  }
+  .cw-glow-cta {
+    box-shadow: 0 0 24px color-mix(in srgb, var(--color-cw-green) 40%, transparent);
+  }
+  .cw-glow-cta:hover {
+    box-shadow: 0 0 36px color-mix(in srgb, var(--color-cw-green) 70%, transparent);
+  }
+
+  /* Scroll-reveal: hidden state is applied by JS only (see Reveal.tsx), so
+   * no-JS and reduced-motion users always see content. */
+  .cw-reveal {
+    transition:
+      opacity 0.6s ease,
+      transform 0.6s ease;
+  }
+  .cw-reveal--hidden {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cw-ticker-track,
+  .cw-live-dot,
+  .cw-glow,
+  .cw-floaty,
+  .cw-floaty-slow {
+    animation: none !important;
+  }
+  .cw-reveal,
+  .cw-reveal--hidden {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }
