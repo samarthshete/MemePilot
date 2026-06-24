@@ -15,7 +15,7 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-[1200px] flex-wrap items-start justify-between gap-8 px-[clamp(1.125rem,5vw,3rem)] pb-[clamp(1.5rem,3vw,2.25rem)] pt-[clamp(2.5rem,5vw,4rem)]">
         <div className="max-w-[340px]">
           <div className="flex items-center gap-2.5">
-            <Logo className="size-[34px]" />
+            <Logo />
             <span className="text-lg font-black tracking-[-0.03em]">
               ChadWallet
             </span>

@@ -22,7 +22,8 @@ Status key: ⬜ not started · 🟦 in progress · ✅ done · ⛔ blocked
   - ✅ top/bottom live ticker (static placeholder, pure-CSS marquee, pause-on-hover), header, hero (phone-led, LCP), 4 feature rows, trust strip, final CTA, footer
   - ✅ download buttons (client device-detect → store routing) · Archivo + Space Mono via next/font · scroll-reveal (reduced-motion safe)
   - ✅ SEO/OG (metadata + dynamic next/og opengraph-image) · brand-only via @theme tokens (added cw-surface-2, cw-bezel) · responsive (360/768/1440)
-  - ✅ real app screenshots wired (hero + 4 features) via next/image static imports; ⚠️ logo mark + store badges still on-brand placeholders (no transparent SVG / official badges yet)
+  - ✅ real app screenshots wired (hero + 4 features) via next/image static imports; ✅ real logo mark wired (logo-mark.svg via CSS mask, recolors with currentColor); ⚠️ store badges still on-brand placeholders (no official badge SVGs yet)
+  - ✅ store URLs flow from NEXT_PUBLIC_APP_STORE_URL / NEXT_PUBLIC_PLAY_STORE_URL (no more "#" fallback when .env.local is set)
   - ✅ typecheck + lint + build green; page/OG/health verified 200
 - ⬜ **Stage 2 — Live token banner**
   - ⬜ `/api/trending` (BirdEye, cached, zod) + fallback
@@ -55,3 +56,4 @@ Status key: ⬜ not started · 🟦 in progress · ✅ done · ⛔ blocked
 | 2026-06-24 | 0 | Scaffolded Next.js 16 / React 19 / TS strict / Tailwind v4; brand tokens + dark base; `lib/env.ts` (zod) + `lib/cache.ts`; `/api/health`; `.env.example`; `public/brand/README.md`. Docs moved to `docs/`. ADR-011 added. | `stage-0-wiring` |
 | 2026-06-24 | docs | Aligned docs to Tailwind v4; added Claude Design workflow (ADR-012, DESIGN-WORKFLOW.md, design/) | `stage-0-wiring` |
 | 2026-06-24 | 1 | Landing page: ticker/header/hero/features/trust/final-CTA/footer in src/components/landing/; next/font, scroll-reveal, dynamic OG; ADR-013 (tokens + glow approach). Brand assets still placeholder. | `stage-1-landing` |
+| 2026-06-24 | 1 | Wired real logo mark (public/brand/logo-mark.svg via CSS mask in Logo.tsx, header+footer) + confirmed store URLs flow from NEXT_PUBLIC_* (no "#" fallback). | `stage-1-landing` |

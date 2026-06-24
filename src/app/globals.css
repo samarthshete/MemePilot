@@ -131,6 +131,14 @@ body {
     box-shadow: 0 0 36px color-mix(in srgb, var(--color-cw-green) 70%, transparent);
   }
 
+  /* Logo mark: the real SVG (public/brand/logo-mark.svg) drives the shape via a
+   * mask, so the fill follows `currentColor` (bg-current) — that's how
+   * text-cw-text / hover:text-cw-green recolor it without inlining 28KB. */
+  .cw-logo-mark {
+    -webkit-mask: url("/brand/logo-mark.svg") center / contain no-repeat;
+    mask: url("/brand/logo-mark.svg") center / contain no-repeat;
+  }
+
   /* Scroll-reveal: hidden state is applied by JS only (see Reveal.tsx), so
    * no-JS and reduced-motion users always see content. */
   .cw-reveal {
