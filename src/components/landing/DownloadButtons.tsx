@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { trackDownloadClick } from "@/lib/analytics";
 import { detectMobileOS } from "@/lib/device";
 import { APP_STORE_URL, PLAY_STORE_URL } from "./store-links";
 
@@ -13,7 +14,13 @@ import { APP_STORE_URL, PLAY_STORE_URL } from "./store-links";
  * Badges are on-brand placeholders; drop the official SVGs into public/brand/
  * and swap <StoreBadge> internals when they're available.
  */
-export function DownloadButtons({ className = "" }: { className?: string }) {
+export function DownloadButtons({
+  className = "",
+  location = "hero",
+}: {
+  className?: string;
+  location?: string;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (ref.current) ref.current.dataset.os = detectMobileOS();
@@ -27,11 +34,13 @@ export function DownloadButtons({ className = "" }: { className?: string }) {
       <StoreBadge
         store="app-store"
         href={APP_STORE_URL}
+        location={location}
         className="group-data-[os=android]/dl:order-last"
       />
       <StoreBadge
         store="google-play"
         href={PLAY_STORE_URL}
+        location={location}
         className="group-data-[os=android]/dl:order-first"
       />
     </div>
@@ -41,10 +50,12 @@ export function DownloadButtons({ className = "" }: { className?: string }) {
 function StoreBadge({
   store,
   href,
+  location,
   className = "",
 }: {
   store: "app-store" | "google-play";
   href: string;
+  location: string;
   className?: string;
 }) {
   const isAppStore = store === "app-store";
@@ -59,6 +70,9 @@ function StoreBadge({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={() =>
+        trackDownloadClick(isAppStore ? "app_store" : "google_play", location)
+      }
       className={`${base} ${skin} ${className}`}
       aria-label={isAppStore ? "Download on the App Store" : "Get it on Google Play"}
     >

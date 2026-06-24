@@ -15,6 +15,7 @@ A marketing **landing page** (must-have) + a **web trading page** (bonus) for **
 3. **`docs/DESIGN-WORKFLOW.md`** — how Claude Design and Claude Code split the work + handoff rules.
 4. **`docs/DECISIONS.md`** — why each tool/approach was chosen (ADRs). **Don't contradict an ADR without proposing a new one.**
 5. **`docs/PROGRESS.md`** — current status + session log. **Update it as you work.**
+6. **`docs/DEPLOYMENT.md`** — how it ships (Vercel + Cloudflare) + the production-readiness checklist.
 
 ## Stack
 - **Next.js (App Router) + TypeScript (strict) + Tailwind CSS**

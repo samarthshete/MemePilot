@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Logo } from "./Logo";
 import { SmartDownloadLink } from "./SmartDownloadLink";
 
@@ -80,18 +81,20 @@ export function SiteFooter() {
             <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-cw-text-muted">
               Legal
             </span>
-            <a href="#" className={linkClass}>
+            <Link href="/privacy" className={linkClass}>
               Privacy
-            </a>
-            <a href="#" className={linkClass}>
+            </Link>
+            <Link href="/terms" className={linkClass}>
               Terms
-            </a>
+            </Link>
           </div>
           <div className="flex flex-col items-start gap-3.5">
             <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-cw-text-muted">
               Get the app
             </span>
-            <SmartDownloadLink className="px-5">Download ↓</SmartDownloadLink>
+            <SmartDownloadLink location="footer" className="px-5">
+              Download ↓
+            </SmartDownloadLink>
           </div>
         </nav>
       </div>

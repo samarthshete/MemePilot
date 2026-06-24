@@ -18,7 +18,10 @@ export function FinalCta() {
         <p className="mx-auto mt-5 max-w-[460px] text-[clamp(1rem,1.6vw,1.25rem)] font-medium text-cw-text-muted">
           Download ChadWallet and start trading in seconds.
         </p>
-        <DownloadButtons className="mx-auto mt-8 max-w-[520px] justify-center" />
+        <DownloadButtons
+          location="final_cta"
+          className="mx-auto mt-8 max-w-[520px] justify-center"
+        />
       </div>
     </section>
   );
