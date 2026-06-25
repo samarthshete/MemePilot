@@ -23,7 +23,10 @@ export type QuoteParams = {
   slippageBps: number;
 };
 
-const quoteSchema = z.object({
+// looseObject: KEEP all original fields. Jupiter's /swap requires the COMPLETE,
+// unmodified quoteResponse — stripping unknown keys (contextSlot, platformFee,
+// etc.) makes /swap reject it. We only TYPE the fields we read.
+const quoteSchema = z.looseObject({
   inputMint: z.string(),
   inAmount: z.string(),
   outputMint: z.string(),
@@ -31,10 +34,12 @@ const quoteSchema = z.object({
   otherAmountThreshold: z.string(),
   slippageBps: z.number(),
   priceImpactPct: z.string(),
+  // loose at EVERY level — /swap needs the complete routePlan untouched; we only
+  // type `label` for display.
   routePlan: z
     .array(
-      z.object({
-        swapInfo: z.object({ label: z.string().optional() }).partial().optional(),
+      z.looseObject({
+        swapInfo: z.looseObject({ label: z.string().optional() }).optional(),
       }),
     )
     .optional(),
@@ -91,4 +96,67 @@ export async function getQuote(params: QuoteParams): Promise<JupiterQuote> {
   });
 
   return quoteSchema.parse(json);
+}
+
+const LITE_SWAP = "https://lite-api.jup.ag/swap/v1/swap";
+const PRO_SWAP = "https://api.jup.ag/swap/v1/swap";
+
+const swapBuildSchema = z.object({ swapTransaction: z.string() });
+
+export type BuildSwapParams = {
+  quoteResponse: JupiterQuote;
+  userPublicKey: string;
+  wrapAndUnwrapSol?: boolean;
+  /**
+   * FEE-READY but OFF by default. To enable a platform fee later: (1) fetch the
+   * quote with `platformFeeBps`, and (2) pass `feeAccount` = your referral token
+   * account here. Leaving it undefined charges $0 (ADR-022). DRAFT: not enabled.
+   */
+  feeAccount?: string;
+};
+
+/**
+ * Build (NOT send) the swap VersionedTransaction for the user's wallet. Returns
+ * base64 `swapTransaction` for the CLIENT to sign in Privy. The server never
+ * signs and never sends here (hard rule 5 + Stage 6b invariants).
+ */
+export async function buildSwapTransaction(
+  params: BuildSwapParams,
+): Promise<string> {
+  const apiKey = getServerEnv().JUPITER_API_KEY;
+  const base = apiKey ? PRO_SWAP : LITE_SWAP;
+  const body = {
+    quoteResponse: params.quoteResponse,
+    userPublicKey: params.userPublicKey,
+    wrapAndUnwrapSol: params.wrapAndUnwrapSol ?? true,
+    dynamicComputeUnitLimit: true,
+    ...(params.feeAccount ? { feeAccount: params.feeAccount } : {}),
+  };
+
+  const json = await withRetry(async () => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    try {
+      const res = await fetch(base, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          ...(apiKey ? { "x-api-key": apiKey } : {}),
+        },
+        body: JSON.stringify(body),
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      if (!res.ok) {
+        const err: HttpError = new Error(`Jupiter swap-build → HTTP ${res.status}`);
+        err.status = res.status;
+        throw err;
+      }
+      return (await res.json()) as unknown;
+    } finally {
+      clearTimeout(timer);
+    }
+  });
+
+  return swapBuildSchema.parse(json).swapTransaction;
 }

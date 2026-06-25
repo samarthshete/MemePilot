@@ -2,8 +2,8 @@
 
 **Keep this current.** At the end of every stage, check off tasks, set the status, and add a session-log row.
 
-**Current focus:** Stage 6a ✅ — Jupiter quote-only preview (no swap/sign); next is 6b (execution behind risk gate)
-**Last updated:** 2026-06-25 (Stage 6a: /api/quote via keyless Jupiter lite host, right-panel quote preview, quote-only)
+**Current focus:** Stage 6b 🟦 — BUY execution built (client-sign + server-relay); live on-chain test pending (Alchemy origin allowlist + browser signature)
+**Last updated:** 2026-06-25 (Stage 6b: /api/swap/build+send, Privy client signing, MAX_BUY_USD cap, /risk page, review modal)
 **Live URL:** _not deployed_
 **Active branch:** `main`
 
@@ -51,7 +51,9 @@ Status key: ⬜ not started · 🟦 in progress · ✅ done · ⛔ blocked
   - ✅ verified: real data, 1 upstream call per window (holders/trades), no key/BirdEye URL in client bundle
 - 🟦 **Stage 6 — Buy & Sell** (Jupiter quote/build → Privy sign → Alchemy send → position)
   - ✅ **6a quote-only**: `src/lib/jupiter.ts` + `POST /api/quote` (Jupiter `lite-api.jup.ag/swap/v1/quote`, keyless free; pro host if `JUPITER_API_KEY`), USD→SOL via BirdEye, decimals via token_overview, cached 12s + retry; right-panel quote preview (pay/receive/impact/slippage/min-received/route) debounced on amount+slippage. NO swap/sign/send. ADR-021
-  - ⬜ **6b execution**: risk-disclaimer + confirm gate → Privy sign → Alchemy send (`SOLANA_RPC_URL`) → position/PnL
+  - 🟦 **6b buy execution (built; on-chain test pending)**: `POST /api/swap/build` (Jupiter swap-build, MAX_BUY_USD=$5 server-enforced) → client signs in Privy (`useSignTransaction`, user approves) → `POST /api/swap/send` relays signed bytes via server-only `SOLANA_RPC_URL` + confirms → position via `getTokenAccountsByOwner`. Review modal (amounts + first-trade risk checkbox), /risk + /terms legal mechanism (DRAFT copy), fee-ready/$0, SELL deferred. ADR-022
+    - ✅ verified: build returns a real signable tx; cap enforced server-side; server never signs/holds keys; no key/host in client bundle
+    - ⚠️ blocked for live test: Alchemy `SOLANA_RPC_URL` key has an origin allowlist that rejects server calls (fix in Alchemy dashboard); + needs a funded wallet + browser signature (not run by tooling)
 
 ---
 
@@ -79,3 +81,4 @@ Status key: ⬜ not started · 🟦 in progress · ✅ done · ⛔ blocked
 | 2026-06-25 | 4 | Trading page /t/[address]: 3-col shell (trending list / header+chart+placeholder tabs / buy-sell shell), Lightweight Charts area chart via /api/ohlcv (free-tier /defi/ohlcv, cached 180s + retry), ticker/list link to /t/. Buy=login-or-disabled (no swap). ADR-019. | `main` |
 | 2026-06-25 | 5 | Holders + Live Trades tabs: /api/holders (300s) + /api/trades (45s) via free-tier /defi/v3/token/{holder,txs} + token_overview (% of supply, supply cached 1h); trades poll 45s only when tab active+visible; graceful gating fallback; read-only. ADR-020. | `main` |
 | 2026-06-25 | 6a | Jupiter QUOTE-ONLY: src/lib/jupiter.ts + POST /api/quote (keyless lite-api.jup.ag/swap/v1/quote; USD→SOL via BirdEye, decimals via token_overview; cached 12s + retry); right-panel preview (receive/impact/slippage/min-received/route) debounced. No swap/sign/send; quoting read-only. ADR-021. | `main` |
+| 2026-06-25 | 6b | BUY execution: jupiter.buildSwapTransaction + /api/swap/{build,send} + /api/position + solana.ts relay (raw JSON-RPC, server never signs); ReviewModal (Privy useSignTransaction, risk checkbox), MAX_BUY_USD=$5 server-enforced, /risk + /terms DRAFT legal, fee-ready/$0, SELL deferred. Build verified (real tx); on-chain test pending (Alchemy origin allowlist). +@solana-program/memo. ADR-022. | `main` |

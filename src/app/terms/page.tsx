@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
 
+// DRAFT — not final. Placeholder "Part C" copy; legal/legal-copy-DRAFT.md was not
+// provided. Replace with lawyer-reviewed wording before launch ([BRACKETS] = TBD).
+
 export const metadata: Metadata = {
   title: "Terms of Service — MemePilot",
   description:

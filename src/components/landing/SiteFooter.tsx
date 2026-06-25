@@ -87,6 +87,9 @@ export function SiteFooter() {
             <Link href="/terms" className={linkClass}>
               Terms
             </Link>
+            <Link href="/risk" className={linkClass}>
+              Risk
+            </Link>
           </div>
           <div className="flex flex-col items-start gap-3.5">
             <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-cw-text-muted">
