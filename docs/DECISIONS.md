@@ -45,8 +45,9 @@ Format: `ADR-NNN — Title` · Status · Date · Context · Decision · Conseque
 
 - **Status:** Accepted · **Date:** 2026-06-24
 - **Context:** Need a reliable way to send signed swaps and read balances. The Alchemy URL embeds a secret.
-- **Decision:** Alchemy Solana mainnet RPC server-side (`SOLANA_RPC_URL`) for send/confirm/balance. Privy's client config uses a **public** RPC (`NEXT_PUBLIC_SOLANA_RPC_URL`) for low-rate client reads, so the Alchemy key never ships to the browser.
+- **Decision:** Alchemy (keyed) Solana mainnet RPC server-side (`SOLANA_RPC_URL`) for send/confirm/balance. Privy's client config uses a **keyless/public** RPC (`NEXT_PUBLIC_SOLANA_RPC_URL`, e.g. `https://api.mainnet-beta.solana.com`) for low-rate client reads, so the Alchemy key never ships to the browser.
 - **Consequences:** Keys stay safe; client reads are rate-limited but fine for MVP.
+- **Update (2026-06-25):** Enforced the split after a keyed Alchemy URL was briefly placed in `NEXT_PUBLIC_SOLANA_RPC_URL` (it inlined into the client bundle). Now: `SOLANA_RPC_URL` (server, keyed) and `NEXT_PUBLIC_SOLANA_RPC_URL` (public, keyless) are distinct vars, and a **startup guard in `public-env.ts` throws** if the public var looks keyed (matches `alchemy`, `/v2/<key>`, or `?api-key=`) — failing the build rather than shipping the key. `.env.example` documents both. Rotate any key that was ever built/deployed with the public var.
 
 ### ADR-007 — Solana-only, non-custodial only; Non-Goals deferred
 

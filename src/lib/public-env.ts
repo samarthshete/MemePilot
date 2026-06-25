@@ -27,6 +27,25 @@ export const publicEnv: PublicEnv = publicEnvSchema.parse({
   NEXT_PUBLIC_PLAY_STORE_URL: process.env.NEXT_PUBLIC_PLAY_STORE_URL,
 });
 
+// Guard (ADR-006): the public RPC ships to the browser, so it must be KEYLESS.
+// A keyed URL (Alchemy /v2/<key>, ?api-key=…) belongs in server-only SOLANA_RPC_URL.
+// Throws at startup/build to prevent re-introducing the leak.
+{
+  const rpc = publicEnv.NEXT_PUBLIC_SOLANA_RPC_URL;
+  if (
+    rpc &&
+    (/alchemy/i.test(rpc) ||
+      /\/v2\/[A-Za-z0-9_-]+/.test(rpc) ||
+      /[?&]api[-_]?key=/i.test(rpc))
+  ) {
+    throw new Error(
+      "NEXT_PUBLIC_SOLANA_RPC_URL looks like a KEYED RPC URL (e.g. Alchemy /v2/<key> or ?api-key=). " +
+        "A keyed RPC URL must NOT be in a NEXT_PUBLIC_ var — it would ship to the browser. " +
+        "Use a keyless/public RPC here (e.g. https://api.mainnet-beta.solana.com) and put the keyed URL in the server-only SOLANA_RPC_URL.",
+    );
+  }
+}
+
 /** Read a public var, throwing a clear error if it's missing. */
 export function requirePublic<K extends keyof PublicEnv>(
   key: K,
