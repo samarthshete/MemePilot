@@ -163,3 +163,47 @@ export async function getTickerPrices(
     return getPricesIndividually(addresses);
   }
 }
+
+/* --------------------------------- OHLCV ---------------------------------- */
+/*
+ * GET /defi/ohlcv?address=&type=&time_from=&time_to=  (verified WORKING on the
+ * free tier: HTTP 200). Response: { success, data: { items: [{ o,h,l,c,v,unixTime }] } }.
+ * We chart the close (`c`) as an area series. Ranges map to an interval + window
+ * sized to keep candle counts (and call cost) low.
+ */
+export type OhlcvRange = "1D" | "1W" | "1M";
+export type OhlcvPoint = { time: number; value: number };
+
+const OHLCV_RANGES: Record<OhlcvRange, { type: string; windowSec: number }> = {
+  "1D": { type: "15m", windowSec: 24 * 60 * 60 },
+  "1W": { type: "1H", windowSec: 7 * 24 * 60 * 60 },
+  "1M": { type: "4H", windowSec: 30 * 24 * 60 * 60 },
+};
+
+const ohlcvSchema = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      items: z.array(z.object({ c: z.number(), unixTime: z.number() })),
+    })
+    .nullish(),
+});
+
+/** Close-price area-series points for `address` over `range`. Throws on failure. */
+export async function getOhlcv(
+  address: string,
+  range: OhlcvRange,
+): Promise<OhlcvPoint[]> {
+  const { type, windowSec } = OHLCV_RANGES[range];
+  const timeTo = Math.floor(Date.now() / 1000);
+  const timeFrom = timeTo - windowSec;
+  const json = ohlcvSchema.parse(
+    await withRetry(() =>
+      birdeyeGet(
+        `/defi/ohlcv?address=${encodeURIComponent(address)}&type=${type}&time_from=${timeFrom}&time_to=${timeTo}`,
+      ),
+    ),
+  );
+  const items = json.data?.items ?? [];
+  return items.map((item) => ({ time: item.unixTime, value: item.c }));
+}

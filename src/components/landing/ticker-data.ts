@@ -11,6 +11,8 @@ export type Token = {
   /** 24h change as a percentage (e.g. 22.9 = +22.90%). Sign mirrors `direction`. */
   change24h: number;
   direction: "up" | "down";
+  /** Solana mint; present for live tokens (links to /t/<address>). Absent on placeholders. */
+  address?: string;
 };
 
 // Static fallback: shown only if BirdEye is unreachable and there's no last-good

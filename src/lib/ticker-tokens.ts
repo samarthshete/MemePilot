@@ -48,6 +48,7 @@ async function fetchLiveTrending(): Promise<Token[]> {
       tokens.push({
         tag: t.tag,
         symbol: t.symbol,
+        address: t.address,
         priceUsd: point.priceUsd,
         change24h: point.change24h,
         direction: point.change24h >= 0 ? "up" : "down",
@@ -64,4 +65,54 @@ async function fetchLiveTrending(): Promise<Token[]> {
     );
     return lastGood ?? PLACEHOLDER_TOKENS;
   }
+}
+
+/** Truncated mint for display, e.g. So11…1112. */
+function truncateMint(address: string): string {
+  return address.length > 10
+    ? `${address.slice(0, 4)}…${address.slice(-4)}`
+    : address;
+}
+
+export type TokenSummary = {
+  address: string;
+  symbol: string;
+  tag: string;
+  /** True if the mint is in our curated config (real symbol vs truncated address). */
+  known: boolean;
+  priceUsd: number | null;
+  change24h: number | null;
+};
+
+/**
+ * Header summary for the trading page: symbol/tag from the curated config (or a
+ * truncated address for unknown mints) + live price/24h change from /defi/price.
+ * Cached 60s per address; never throws (price is null if BirdEye fails).
+ */
+export function getTokenSummary(address: string): Promise<TokenSummary> {
+  return getOrSet(`token:summary:${address}`, 60_000, () =>
+    fetchTokenSummary(address),
+  );
+}
+
+async function fetchTokenSummary(address: string): Promise<TokenSummary> {
+  const curated = CURATED_TOKENS.find((t) => t.address === address);
+  const summary: TokenSummary = {
+    address,
+    symbol: curated?.symbol ?? truncateMint(address),
+    tag: curated?.tag ?? address.slice(0, 3).toUpperCase(),
+    known: Boolean(curated),
+    priceUsd: null,
+    change24h: null,
+  };
+  try {
+    const point = (await getTickerPrices([address])).get(address);
+    if (point) {
+      summary.priceUsd = point.priceUsd;
+      summary.change24h = point.change24h;
+    }
+  } catch (err) {
+    console.warn(`[token] price fetch failed for ${address}: ${(err as Error).message}`);
+  }
+  return summary;
 }
