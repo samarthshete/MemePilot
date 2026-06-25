@@ -136,8 +136,14 @@ body {
    * mask, so the fill follows `currentColor` (bg-current) — that's how
    * text-cw-text / hover:text-cw-green recolor it without inlining 28KB. */
   .cw-logo-mark {
-    -webkit-mask: url("/brand/logo-mark.svg") center / contain no-repeat;
-    mask: url("/brand/logo-mark.svg") center / contain no-repeat;
+    -webkit-mask-image: url("/brand/logo-mark.svg");
+    mask-image: url("/brand/logo-mark.svg");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
   }
 
   /* Scroll-reveal: hidden state is applied by JS only (see Reveal.tsx), so
