@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getOrSet } from "@/lib/cache";
 import { requireServer } from "@/lib/env";
 
 /**
@@ -206,4 +207,117 @@ export async function getOhlcv(
   );
   const items = json.data?.items ?? [];
   return items.map((item) => ({ time: item.unixTime, value: item.c }));
+}
+
+/* -------------------------- Holders & recent trades ----------------------- */
+/*
+ * Verified WORKING on the free tier (HTTP 200):
+ *   GET /defi/v3/token/holder → { success, data: { items: [{ owner, ui_amount }] } }
+ *   GET /defi/v3/token/txs     → { success, data: { items: [{ side, volume_usd, owner, block_unix_time, tx_hash }] } }
+ *   GET /defi/token_overview   → { success, data: { totalSupply, circulatingSupply } }  (for % of supply)
+ */
+
+export type Holder = { owner: string; uiAmount: number; pctOfSupply: number | null };
+export type Trade = {
+  side: "buy" | "sell";
+  volumeUsd: number;
+  owner: string;
+  unixTime: number;
+  txHash: string;
+};
+
+const holderSchema = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      items: z.array(z.object({ owner: z.string(), ui_amount: z.number() })),
+    })
+    .nullish(),
+});
+
+const overviewSchema = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      totalSupply: z.number().nullish(),
+      circulatingSupply: z.number().nullish(),
+    })
+    .nullish(),
+});
+
+const txSchema = z.object({
+  success: z.boolean(),
+  data: z
+    .object({
+      items: z.array(
+        z.object({
+          side: z.string(),
+          volume_usd: z.number().nullish(),
+          owner: z.string(),
+          block_unix_time: z.number(),
+          tx_hash: z.string(),
+        }),
+      ),
+    })
+    .nullish(),
+});
+
+/** Total supply, cached 1h (barely changes) so it doesn't add to the per-window holders cost. */
+function getTokenSupply(address: string): Promise<number | null> {
+  return getOrSet(`token:supply:${address}`, 3_600_000, async () => {
+    try {
+      const ov = overviewSchema.parse(
+        await withRetry(() =>
+          birdeyeGet(`/defi/token_overview?address=${encodeURIComponent(address)}`),
+        ),
+      );
+      return ov.data?.totalSupply ?? ov.data?.circulatingSupply ?? null;
+    } catch (err) {
+      console.warn(`[holders] supply fetch failed: ${(err as Error).message}`);
+      return null;
+    }
+  });
+}
+
+/** Top holders with % of supply (null if supply unavailable). Throws on holder-fetch failure. */
+export async function getTopHolders(
+  address: string,
+  limit = 20,
+): Promise<Holder[]> {
+  const json = holderSchema.parse(
+    await withRetry(() =>
+      birdeyeGet(
+        `/defi/v3/token/holder?address=${encodeURIComponent(address)}&offset=0&limit=${limit}`,
+      ),
+    ),
+  );
+  const items = json.data?.items ?? [];
+  const supply = await getTokenSupply(address);
+  return items.map((h) => ({
+    owner: h.owner,
+    uiAmount: h.ui_amount,
+    pctOfSupply: supply && supply > 0 ? (h.ui_amount / supply) * 100 : null,
+  }));
+}
+
+/** Recent swaps, newest first. Throws on failure. */
+export async function getRecentTrades(
+  address: string,
+  limit = 20,
+): Promise<Trade[]> {
+  const json = txSchema.parse(
+    await withRetry(() =>
+      birdeyeGet(
+        `/defi/v3/token/txs?address=${encodeURIComponent(address)}&offset=0&limit=${limit}&tx_type=swap&sort_type=desc`,
+      ),
+    ),
+  );
+  const items = json.data?.items ?? [];
+  return items.map((t) => ({
+    side: t.side === "buy" ? "buy" : "sell",
+    volumeUsd: t.volume_usd ?? 0,
+    owner: t.owner,
+    unixTime: t.block_unix_time,
+    txHash: t.tx_hash,
+  }));
 }

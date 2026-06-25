@@ -2,8 +2,8 @@
 
 **Keep this current.** At the end of every stage, check off tasks, set the status, and add a session-log row.
 
-**Current focus:** Stage 4 ✅ — trading page shell + live price chart (`/t/[address]`); next is Stage 5 (holders/trades)
-**Last updated:** 2026-06-25 (Stage 4: /t/[address] 3-col shell, Lightweight Charts area chart via /api/ohlcv free-tier)
+**Current focus:** Stage 5 ✅ — Holders + Live Trades tabs wired (BirdEye free tier); next is Stage 6 (buy/sell)
+**Last updated:** 2026-06-25 (Stage 5: /api/holders + /api/trades, holder %/amount + live swaps, visibility-gated trade polling)
 **Live URL:** _not deployed_
 **Active branch:** `main`
 
@@ -43,7 +43,12 @@ Status key: ⬜ not started · 🟦 in progress · ✅ done · ⛔ blocked
   - ✅ `/api/ohlcv?address=&range=1D|1W|1M` → **`/defi/ohlcv` works on FREE tier** (15m/1H/4H), cached 180s/(addr,range) + retry-on-429, zod; area chart (Lightweight Charts v5), graceful "Chart unavailable"
   - ✅ buy/sell SHELL only: login when signed out / disabled "Trading coming soon" signed in — no swap path; read-only without login; ADR-019
   - ✅ verified real price+chart, 1 upstream call/(addr,range) window, no key/BirdEye URL in client bundle
-- ⬜ **Stage 5 — Holders + live trades** (`/api/holders`, `/api/trades`, tabs, polling)
+- ✅ **Stage 5 — Holders + live trades** (`/api/holders`, `/api/trades`, tabs, polling)
+  - ✅ free-tier endpoints (verified): `/defi/v3/token/holder`, `/defi/v3/token/txs`, `/defi/token_overview` (for % of supply) — all HTTP 200 free
+  - ✅ Holders tab: top 20 wallets — rank, copyable address, % of supply + amount (fetched once, never polled)
+  - ✅ Live Trades tab: recent swaps — side (buy/sell), USD, relative time, wallet (newest first); polls 45s ONLY when tab active + page visible
+  - ✅ caches: holders 300s, trades 45s, supply 1h; graceful "unavailable" empty state if gated; read-only (no swap). ADR-020
+  - ✅ verified: real data, 1 upstream call per window (holders/trades), no key/BirdEye URL in client bundle
 - ⬜ **Stage 6 — Buy & Sell** (Jupiter quote/build → Privy sign → Alchemy send → position)
 
 ---
@@ -70,3 +75,4 @@ Status key: ⬜ not started · 🟦 in progress · ✅ done · ⛔ blocked
 | 2026-06-24 | — | Rebrand product ChadWallet → MemePilot (UI text, metadata, OG image, legal pages, package name `memepilot-web`, README + docs, domain → memepilot.xyz). Store URLs/app IDs, screenshots, `cw-` tokens, logo-mark placeholder kept. Download CTAs → "Get the app". ADR-016. | `main` |
 | 2026-06-25 | 3 | Privy auth: providers.tsx PrivyProvider (email+Google, Solana-only embedded wallet create-on-login, @solana/kit RPC), nav AuthButton (address+copy+logout), GET /api/me Bearer verify, CSP +Privy. No secret in client bundle; public browsing intact. ADR-018 + ADR-015 update. Completes Phase 1. | `main` |
 | 2026-06-25 | 4 | Trading page /t/[address]: 3-col shell (trending list / header+chart+placeholder tabs / buy-sell shell), Lightweight Charts area chart via /api/ohlcv (free-tier /defi/ohlcv, cached 180s + retry), ticker/list link to /t/. Buy=login-or-disabled (no swap). ADR-019. | `main` |
+| 2026-06-25 | 5 | Holders + Live Trades tabs: /api/holders (300s) + /api/trades (45s) via free-tier /defi/v3/token/{holder,txs} + token_overview (% of supply, supply cached 1h); trades poll 45s only when tab active+visible; graceful gating fallback; read-only. ADR-020. | `main` |

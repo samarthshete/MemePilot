@@ -22,3 +22,23 @@ export function formatPercent(value: number): string {
   if (!Number.isFinite(value)) return "—";
   return `${Math.abs(value).toFixed(2)}%`;
 }
+
+/** Compact number, e.g. 6996666051223 → "7T". For token amounts. */
+export function formatCompact(value: number): string {
+  if (!Number.isFinite(value)) return "—";
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+/** Relative time from a unix-seconds timestamp, e.g. "12s ago". */
+export function timeAgo(unixSeconds: number): string {
+  const s = Math.max(0, Math.floor(Date.now() / 1000 - unixSeconds));
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}

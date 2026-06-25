@@ -96,7 +96,7 @@ export default async function TradingPage({ params }: Params) {
             <PriceChart address={address} />
           </div>
 
-          <TokenTabs />
+          <TokenTabs address={address} />
         </section>
 
         {/* RIGHT — buy/sell shell */}
