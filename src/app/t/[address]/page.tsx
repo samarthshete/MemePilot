@@ -101,7 +101,7 @@ export default async function TradingPage({ params }: Params) {
 
         {/* RIGHT — buy/sell shell */}
         <div className="order-2 lg:order-3">
-          <BuySellShell symbol={summary.symbol} />
+          <BuySellShell address={address} symbol={summary.symbol} />
         </div>
       </main>
     </>

@@ -241,9 +241,37 @@ const overviewSchema = z.object({
     .object({
       totalSupply: z.number().nullish(),
       circulatingSupply: z.number().nullish(),
+      decimals: z.number().nullish(),
     })
     .nullish(),
 });
+
+type TokenOverview = { supply: number | null; decimals: number | null };
+
+/** token_overview (supply + decimals), cached 1h — both barely change. */
+function getTokenOverview(address: string): Promise<TokenOverview> {
+  return getOrSet(`token:overview:${address}`, 3_600_000, async () => {
+    try {
+      const ov = overviewSchema.parse(
+        await withRetry(() =>
+          birdeyeGet(`/defi/token_overview?address=${encodeURIComponent(address)}`),
+        ),
+      );
+      return {
+        supply: ov.data?.totalSupply ?? ov.data?.circulatingSupply ?? null,
+        decimals: ov.data?.decimals ?? null,
+      };
+    } catch (err) {
+      console.warn(`[token] overview fetch failed for ${address}: ${(err as Error).message}`);
+      return { supply: null, decimals: null };
+    }
+  });
+}
+
+/** Token decimals (for converting raw amounts to UI amounts). Null if unknown. */
+export async function getTokenDecimals(address: string): Promise<number | null> {
+  return (await getTokenOverview(address)).decimals;
+}
 
 const txSchema = z.object({
   success: z.boolean(),
@@ -262,21 +290,9 @@ const txSchema = z.object({
     .nullish(),
 });
 
-/** Total supply, cached 1h (barely changes) so it doesn't add to the per-window holders cost. */
-function getTokenSupply(address: string): Promise<number | null> {
-  return getOrSet(`token:supply:${address}`, 3_600_000, async () => {
-    try {
-      const ov = overviewSchema.parse(
-        await withRetry(() =>
-          birdeyeGet(`/defi/token_overview?address=${encodeURIComponent(address)}`),
-        ),
-      );
-      return ov.data?.totalSupply ?? ov.data?.circulatingSupply ?? null;
-    } catch (err) {
-      console.warn(`[holders] supply fetch failed: ${(err as Error).message}`);
-      return null;
-    }
-  });
+/** Total supply (for % of supply), cached 1h via the shared token_overview. */
+async function getTokenSupply(address: string): Promise<number | null> {
+  return (await getTokenOverview(address)).supply;
 }
 
 /** Top holders with % of supply (null if supply unavailable). Throws on holder-fetch failure. */
