@@ -2,8 +2,8 @@
 
 **Keep this current.** At the end of every stage, check off tasks, set the status, and add a session-log row.
 
-**Current focus:** Stage 2 ✅ — live BirdEye ticker wired (free tier); awaiting review before Stage 3
-**Last updated:** 2026-06-24 (Stage 2: real ticker prices via curated mints + /defi/price, cached 60s, graceful fallback)
+**Current focus:** Stage 3 ✅ — Privy auth + Solana embedded wallet; **Phase 1 shippable**, ready to deploy
+**Last updated:** 2026-06-25 (Stage 3: Privy email+Google login, Solana-only embedded wallet, /api/me verify, CSP)
 **Live URL:** _not deployed_
 **Active branch:** `main`
 
@@ -30,8 +30,11 @@ Status key: ⬜ not started · 🟦 in progress · ✅ done · ⛔ blocked
   - ✅ top + bottom marquee show REAL prices (SSR via Suspense skeleton, client refresh 60s); free-tier `/defi/price` fallback (multi_price 401-gated). ADR-017
   - ⬜ items link to `/t/<address>` — deferred to Stage 4 (trading page not built yet)
   - ✅ verified: real green/red prices, ONE upstream fetch per 60s window, no key/BirdEye URL in client bundle, fallback renders when BirdEye down
-- ⬜ **Stage 3 — Auth (Privy)**
-  - ⬜ PrivyProvider, Apple/Google login, Solana embedded wallet, `/api/me` token verify
+- ✅ **Stage 3 — Auth (Privy)** — 🎯 completes shippable Phase 1
+  - ✅ `providers.tsx` PrivyProvider (email + Google; Apple deferred), Solana-only embedded wallet `createOnLogin: users-without-wallets`, dark/#11FE9C modal, `solana.rpcs` via @solana/kit
+  - ✅ nav `AuthButton`: !ready placeholder → Sign in → truncated Solana address + copy + logout (with "Setting up wallet…" guard)
+  - ✅ `GET /api/me` verifies Bearer access token (`@privy-io/server-auth`) → `{ userId }` / 401; secret server-only
+  - ✅ CSP updated for Privy (ADR-015 update); browsing stays 100% public; ADR-018
   - ⬜ 🎯 deploy Phase 1 to Vercel + Cloudflare DNS
 
 ## Phase 1.5 — Trading (bonus)
@@ -61,3 +64,4 @@ Status key: ⬜ not started · 🟦 in progress · ✅ done · ⛔ blocked
 | 2026-06-24 | 1 | Wired real logo mark (public/brand/logo-mark.svg via CSS mask in Logo.tsx, header+footer) + confirmed store URLs flow from NEXT_PUBLIC_* (no "#" fallback). | `stage-1-landing` |
 | 2026-06-24 | 1 | Production hardening: security headers + enforced CSP (next.config), robots.ts/sitemap.ts (noindex off-prod), /privacy + /terms stubs (footer wired), branded 404 + 500, @vercel/analytics + download_click event, DEPLOYMENT.md in source-of-truth. ADR-015 (CSP). Verified headers/robots/sitemap, no secret leak. | `stage-1-landing` |
 | 2026-06-24 | — | Rebrand product ChadWallet → MemePilot (UI text, metadata, OG image, legal pages, package name `memepilot-web`, README + docs, domain → memepilot.xyz). Store URLs/app IDs, screenshots, `cw-` tokens, logo-mark placeholder kept. Download CTAs → "Get the app". ADR-016. | `main` |
+| 2026-06-25 | 3 | Privy auth: providers.tsx PrivyProvider (email+Google, Solana-only embedded wallet create-on-login, @solana/kit RPC), nav AuthButton (address+copy+logout), GET /api/me Bearer verify, CSP +Privy. No secret in client bundle; public browsing intact. ADR-018 + ADR-015 update. Completes Phase 1. | `main` |

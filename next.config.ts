@@ -23,18 +23,38 @@ const isDev = process.env.NODE_ENV !== "production";
  *    var, reveal transition-delay) + Next/React injected styles. CSP3 hashing
  *    of style attributes isn't broadly practical here.
  * Dev-only: 'unsafe-eval' + ws: are added for Turbopack HMR; production omits them.
+ *
+ * Privy (ADR-018, ADR-015): Solana-only, no WalletConnect. Per Privy's CSP guide
+ * we add only — script-src: challenges.cloudflare.com (Turnstile); connect-src:
+ * auth.privy.io + *.rpc.privy.systems + our Solana RPC origin(s); frame-src +
+ * child-src: auth.privy.io + Turnstile; worker-src: blob: (Privy crypto workers).
  */
+// http(s) + ws(s) origins of the public Solana RPC (for connect-src).
+const solanaRpcOrigins = (() => {
+  try {
+    const u = new URL(
+      process.env.NEXT_PUBLIC_SOLANA_RPC_URL ?? "https://api.mainnet-beta.solana.com",
+    );
+    return `${u.origin} ${u.protocol === "http:" ? "ws" : "wss"}://${u.host}`;
+  } catch {
+    return "https://api.mainnet-beta.solana.com wss://api.mainnet-beta.solana.com";
+  }
+})();
+
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  `script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://challenges.cloudflare.com${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob:",
-  `connect-src 'self' https://va.vercel-scripts.com${isDev ? " ws:" : ""}`,
+  `connect-src 'self' https://va.vercel-scripts.com https://auth.privy.io https://*.rpc.privy.systems ${solanaRpcOrigins}${isDev ? " ws:" : ""}`,
+  "frame-src 'self' https://auth.privy.io https://challenges.cloudflare.com",
+  "child-src 'self' https://auth.privy.io",
+  "worker-src 'self' blob:",
   "manifest-src 'self'",
   "upgrade-insecure-requests",
 ].join("; ");

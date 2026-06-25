@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Archivo, Space_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { IS_INDEXABLE, SITE_URL } from "@/lib/site";
+import { Providers } from "./providers";
 import "./globals.css";
 
 // Archivo = display/body (variable font); Space Mono = numerals/tickers.
@@ -59,7 +60,7 @@ export default function RootLayout({
       className={`${archivo.variable} ${spaceMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col overflow-x-clip bg-cw-bg font-sans text-cw-text">
-        {children}
+        <Providers>{children}</Providers>
         <Analytics />
       </body>
     </html>
