@@ -22,7 +22,7 @@ export const CURATED_TOKENS: CuratedToken[] = [
 ];
 
 const CACHE_KEY = "ticker:trending";
-const TTL_MS = 60_000; // 60s — one upstream fetch per window serves all visitors
+const TTL_MS = 300_000; // 5 min — one upstream fetch per window; free-tier quota hedge (ADR-017)
 
 // Last successful result, kept across cache windows so a transient BirdEye
 // outage degrades to the previous real prices instead of the static placeholder.

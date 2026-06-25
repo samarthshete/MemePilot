@@ -116,15 +116,42 @@ async function getSinglePrice(address: string): Promise<PricePoint | null> {
   return toPoint(json.data);
 }
 
+// The batch endpoint /defi/multi_price 401s on the free plan, so by default we
+// skip it and go straight to per-token /defi/price — saves a wasted call + its
+// latency every window. Set BIRDEYE_MULTI_PRICE=true after upgrading to a plan
+// that includes it and the one-call batch path auto-activates.
+const MULTI_PRICE_ENABLED = process.env.BIRDEYE_MULTI_PRICE === "true";
+
+async function getPricesIndividually(
+  addresses: string[],
+): Promise<Map<string, PricePoint>> {
+  const out = new Map<string, PricePoint>();
+  for (const address of addresses) {
+    try {
+      const point = await withRetry(() => getSinglePrice(address));
+      if (point) out.set(address, point);
+    } catch (e) {
+      console.warn(`[birdeye] price failed for ${address}: ${(e as Error).message}`);
+    }
+  }
+  return out;
+}
+
 /**
  * Prices for the given mints as a map address → { priceUsd, change24h }.
- * Tries the batch endpoint first (one call); if it's gated/unavailable, falls
- * back to per-token /defi/price (sequential, retry-on-429). Missing tokens are
- * simply absent from the map.
+ * Free tier (default): loops /defi/price. With BIRDEYE_MULTI_PRICE=true: one
+ * batch /defi/multi_price call, falling back to the loop if it's unavailable.
+ * Missing tokens are simply absent from the map.
  */
 export async function getTickerPrices(
   addresses: string[],
 ): Promise<Map<string, PricePoint>> {
+  if (!MULTI_PRICE_ENABLED) {
+    console.info(
+      `[birdeye] /defi/price ×${addresses.length} (multi_price disabled on free tier)`,
+    );
+    return getPricesIndividually(addresses);
+  }
   try {
     console.info(`[birdeye] multi_price (${addresses.length} mints)`);
     return await getMultiPrice(addresses);
@@ -133,15 +160,6 @@ export async function getTickerPrices(
     console.warn(
       `[birdeye] multi_price unavailable (status ${status ?? "n/a"}); falling back to /defi/price`,
     );
-    const out = new Map<string, PricePoint>();
-    for (const address of addresses) {
-      try {
-        const point = await withRetry(() => getSinglePrice(address));
-        if (point) out.set(address, point);
-      } catch (e) {
-        console.warn(`[birdeye] price failed for ${address}: ${(e as Error).message}`);
-      }
-    }
-    return out;
+    return getPricesIndividually(addresses);
   }
 }
