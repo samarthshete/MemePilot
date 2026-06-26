@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DEFAULT_TRADE_MINT } from "@/lib/trading-config";
 import { Logo } from "./Logo";
 import { SmartDownloadLink } from "./SmartDownloadLink";
 
@@ -67,9 +68,9 @@ export function SiteFooter() {
             <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-cw-text-muted">
               Product
             </span>
-            <a href="#" className={linkClass}>
+            <Link href={`/t/${DEFAULT_TRADE_MINT}`} className={linkClass}>
               Trade
-            </a>
+            </Link>
             <a href="#" className={linkClass}>
               KOL traders
             </a>
