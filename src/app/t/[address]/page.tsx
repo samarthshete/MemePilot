@@ -100,8 +100,10 @@ export default async function TradingPage({ params }: Params) {
           <TokenTabs key={address} address={address} />
         </section>
 
-        {/* RIGHT — buy/sell shell */}
-        <div className="order-2 lg:order-3">
+        {/* RIGHT — buy/sell shell. Sticky on desktop (self-start so the grid cell
+            doesn't stretch and kill the sticky) → Buy/Sell stays in view while the
+            middle column scrolls. top-20 clears the sticky SiteHeader. */}
+        <div className="order-2 lg:order-3 lg:sticky lg:top-20 lg:self-start">
           <BuySellShell address={address} symbol={summary.symbol} />
         </div>
       </main>
