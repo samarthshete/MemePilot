@@ -12,6 +12,7 @@ import { SiteHeader } from "@/components/landing/SiteHeader";
 import { TickerSkeleton } from "@/components/landing/TickerSkeleton";
 import { TrustStrip } from "@/components/landing/TrustStrip";
 import { getTrendingTokens } from "@/lib/ticker-tokens";
+import { DEFAULT_TRADE_MINT } from "@/lib/trading-config";
 
 // Server-renders the live ticker tokens (real BirdEye prices, cached 60s) and
 // hands them to the client <LiveTicker> for its 60s refresh.
@@ -61,6 +62,7 @@ export default function Home() {
             screenshot={tokenScreen}
             screenshotAlt="MemePilot token screen with a live price chart and buy/sell controls"
             body="Buy and sell trending tokens before they trend. One tap, live charts, instant fills — no extensions, no seed phrase, no friction."
+            cta={{ href: `/t/${DEFAULT_TRADE_MINT}`, label: "Start trading" }}
           />
           <FeatureRow
             index="02"

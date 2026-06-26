@@ -1,4 +1,6 @@
+import Link from "next/link";
 import tokenScreen from "../../../public/brand/app-store/token.png";
+import { DEFAULT_TRADE_MINT } from "@/lib/trading-config";
 import { DownloadButtons } from "./DownloadButtons";
 import { PhoneMockup } from "./PhoneMockup";
 
@@ -35,6 +37,14 @@ export function Hero() {
             Get MemePilot today. Never miss the next breakout! Discover, follow
             the smartest traders, and ape in seconds — no seed phrase.
           </p>
+
+          {/* Primary web-trading entry (the app-download block stays below). */}
+          <Link
+            href={`/t/${DEFAULT_TRADE_MINT}`}
+            className="cw-glow-cta mt-6 inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full bg-cw-green px-7 text-base font-extrabold text-cw-bg transition-[box-shadow,transform,background-color] hover:bg-cw-green-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cw-green focus-visible:ring-offset-2 focus-visible:ring-offset-cw-bg active:translate-y-px"
+          >
+            Start trading →
+          </Link>
 
           {/* Loud download block */}
           <div className="cw-glow-panel mt-7 rounded-[1.375rem] border border-cw-green/30 bg-gradient-to-b from-cw-green/10 to-cw-green/[0.03] p-5">

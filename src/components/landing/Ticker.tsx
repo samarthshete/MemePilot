@@ -65,7 +65,7 @@ function TickerRow({
             <span className="grid size-[22px] place-items-center rounded-full border border-cw-green/35 bg-cw-surface font-mono text-[9px] font-bold tracking-tight text-cw-green">
               {t.tag}
             </span>
-            <span className="font-mono text-[13px] font-bold text-cw-text">
+            <span className="font-mono text-[13px] font-bold text-cw-text underline-offset-2 group-hover:underline">
               {t.symbol}
             </span>
             <span className="font-mono text-[13px] text-cw-text-muted">
@@ -91,7 +91,8 @@ function TickerRow({
             key={`${t.symbol}-${i}`}
             href={`/t/${t.address}`}
             tabIndex={ariaHidden ? -1 : undefined}
-            className={`${cellClass} transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cw-green`}
+            aria-label={`Trade ${t.symbol}`}
+            className={`group ${cellClass} cursor-pointer transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cw-green`}
           >
             {inner}
           </Link>

@@ -1,4 +1,5 @@
 import type { StaticImageData } from "next/image";
+import Link from "next/link";
 import { PhoneMockup } from "./PhoneMockup";
 import { Reveal } from "./Reveal";
 
@@ -16,6 +17,7 @@ export function FeatureRow({
   screenshot,
   screenshotAlt,
   reversed = false,
+  cta,
 }: {
   index: string;
   titleLead: string;
@@ -25,6 +27,7 @@ export function FeatureRow({
   screenshot?: StaticImageData;
   screenshotAlt?: string;
   reversed?: boolean;
+  cta?: { href: string; label: string };
 }) {
   return (
     <Reveal>
@@ -39,6 +42,14 @@ export function FeatureRow({
           <p className="mt-4 max-w-[420px] text-[clamp(0.9375rem,1.4vw,1.125rem)] font-medium leading-relaxed text-cw-text-muted">
             {body}
           </p>
+          {cta && (
+            <Link
+              href={cta.href}
+              className="mt-4 inline-flex items-center gap-1 rounded font-bold text-cw-green transition-colors hover:text-cw-green-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cw-green focus-visible:ring-offset-2 focus-visible:ring-offset-cw-bg"
+            >
+              {cta.label} →
+            </Link>
+          )}
         </div>
 
         <div
