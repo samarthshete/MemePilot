@@ -11,12 +11,12 @@ export function SiteHeader() {
         <Link
           href="/"
           className="flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cw-green focus-visible:ring-offset-2 focus-visible:ring-offset-cw-bg"
-          aria-label="MemePilot home"
+          aria-label="ChadWallet home"
         >
           <Logo />
           {/* Wordmark hides on the smallest screens so the new Trade link fits. */}
           <span className="hidden text-lg font-black tracking-[-0.03em] sm:inline">
-            MemePilot
+            ChadWallet
           </span>
         </Link>
         <Link

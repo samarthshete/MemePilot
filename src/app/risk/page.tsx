@@ -6,9 +6,9 @@ import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
 // was not provided. Replace with lawyer-reviewed wording before launch ([BRACKETS] = TBD).
 
 export const metadata: Metadata = {
-  title: "Risk Disclosure — MemePilot",
+  title: "Risk Disclosure — ChadWallet",
   description:
-    "The risks of trading memecoins with MemePilot. Placeholder pending review.",
+    "The risks of trading memecoins with ChadWallet. Placeholder pending review.",
 };
 
 export default function RiskPage() {
@@ -24,7 +24,7 @@ export default function RiskPage() {
 
       <LegalSection heading="Non-custodial — you are in control">
         <p>
-          MemePilot is non-custodial: you hold your keys and you personally
+          ChadWallet is non-custodial: you hold your keys and you personally
           approve and sign every transaction. We never take custody of your
           funds and cannot move, freeze, or reverse them. On-chain transactions
           are final.
@@ -43,7 +43,7 @@ export default function RiskPage() {
 
       <LegalSection heading="Not financial advice">
         <p>
-          Nothing in MemePilot is financial, legal, or tax advice or a
+          Nothing in ChadWallet is financial, legal, or tax advice or a
           recommendation to buy or sell any asset. You are solely responsible for
           your trades. [JURISDICTION / ELIGIBILITY PLACEHOLDER].
         </p>

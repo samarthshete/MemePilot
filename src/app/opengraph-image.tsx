@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 // Dynamically generated placeholder OG/Twitter card (1200×630), on-brand.
 // Next auto-wires this to openGraph.images and twitter.images.
-export const alt = "MemePilot — find the next 100x memecoins";
+export const alt = "ChadWallet — find the next 100x memecoins";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -38,7 +38,7 @@ export default function OpengraphImage() {
               backgroundColor: "#11FE9C",
             }}
           />
-          <div style={{ fontSize: "40px", fontWeight: 900 }}>MemePilot</div>
+          <div style={{ fontSize: "40px", fontWeight: 900 }}>ChadWallet</div>
         </div>
         <div
           style={{

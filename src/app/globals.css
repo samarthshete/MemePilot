@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 /*
- * MemePilot brand tokens (see CLAUDE.md "Brand tokens").
- * NOTE: the `cw-` token prefix is historical (the brand palette); product is MemePilot.
+ * ChadWallet brand tokens (see CLAUDE.md "Brand tokens").
+ * NOTE: the `cw-` token prefix is historical (the brand palette); product is ChadWallet.
  * Defined in @theme so they generate Tailwind utilities — e.g. `bg-cw-bg`,
  * `text-cw-green`, `border-cw-surface` — and are also available as CSS vars.
  * Translucent variants (e.g. neon borders, white hairlines) are expressed with

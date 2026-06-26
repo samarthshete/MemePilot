@@ -20,21 +20,21 @@ const spaceMono = Space_Mono({
   display: "swap",
 });
 
-const title = "MemePilot — find the next 100x memecoins";
+const title = "ChadWallet — find the next 100x memecoins";
 const description =
-  "Get MemePilot: the social-first, non-custodial Solana memecoin wallet. Discover trending coins, follow the smartest traders, and ape in seconds — no seed phrase.";
+  "Get ChadWallet: the social-first, non-custodial Solana memecoin wallet. Discover trending coins, follow the smartest traders, and ape in seconds — no seed phrase.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title,
   description,
-  applicationName: "MemePilot",
+  applicationName: "ChadWallet",
   // Only the real production host is indexable; preview/dev emit noindex.
   robots: IS_INDEXABLE ? undefined : { index: false, follow: false },
   openGraph: {
     type: "website",
     url: SITE_URL,
-    siteName: "MemePilot",
+    siteName: "ChadWallet",
     title,
     description,
   },

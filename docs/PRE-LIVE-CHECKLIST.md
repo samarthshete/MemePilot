@@ -129,18 +129,15 @@ ADR-017). The ticker, OHLCV chart, holders, and trades all draw on it.
 
 ## 7. Optional hardening before scale
 
-- [ ] **Rename the App Store / Play store listings** to MemePilot. The mobile app is
-      still branded "ChadWallet"; the store URLs/IDs are intentionally unchanged
-      (ADR-016) so the existing links keep working until the listing is renamed.
-- [ ] **Update `public/brand/logo-mark.svg`** internal `aria-label="ChadWallet"` →
-      `"MemePilot"` (not user-facing — the mark renders via CSS mask — but tidy).
-- [ ] **STALE BRAND ARTIFACT — landing screenshot.** `public/brand/app-store/portfolio.png`
-      (Feature #04 "Track your assets", `src/app/page.tsx`) shows a Holdings row literally
-      named **"ChadWallet"** (173.7M, $693.29) while the product wordmark is MemePilot.
-      It's a captured app screenshot, so it can't be cleanly text-edited. **Decide:** (a) swap
-      for a MemePilot-branded capture, (b) crop the Holdings row out, or (c) accept it until
-      the mobile app is rebranded (consistent with leaving the store listings as ChadWallet,
-      ADR-016). Flagged only — not silently edited.
+- [x] ~~Rename the App Store / Play store listings to MemePilot~~ — **N/A.** The display
+      brand was reverted to **ChadWallet** (ADR-016 note, 2026-06-25) to match the assessment
+      brief, so the store listings, URLs/IDs, and the mobile app are now all consistently
+      ChadWallet. Nothing to rename.
+- [x] ~~Update `logo-mark.svg` aria-label → "MemePilot"~~ — **N/A.** It already reads
+      `aria-label="ChadWallet"`, which is now correct.
+- [x] ~~STALE BRAND ARTIFACT — `portfolio.png` shows "ChadWallet"~~ — **RESOLVED by the
+      ChadWallet revert.** The screenshot's Holdings row ("ChadWallet", 173.7M, $693.29) is
+      now *consistent* with the site wordmark, not an artifact. No image edit needed.
 - [ ] Replace the placeholder OG image / brand mark with final art if desired (the OG
       card is generated dynamically via `next/og` and is on-brand but generic).
 - [ ] Consider rotating the Alchemy key if it was ever built into a deployed bundle

@@ -1,6 +1,6 @@
 # public/brand — brand assets
 
-Real MemePilot brand assets live here (the screenshots show the published app).
+Real ChadWallet brand assets live here (the screenshots show the published app).
 The landing page imports several of these directly (static imports → optimized
 by next/image).
 

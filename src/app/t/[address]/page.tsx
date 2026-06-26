@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { address } = await params;
   const symbol =
     CURATED_TOKENS.find((t) => t.address === address)?.symbol ?? "Token";
-  return { title: `Trade ${symbol} — MemePilot` };
+  return { title: `Trade ${symbol} — ChadWallet` };
 }
 
 async function TickerData() {

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — MemePilot",
-  description: "How MemePilot handles your data. Placeholder pending review.",
+  title: "Privacy Policy — ChadWallet",
+  description: "How ChadWallet handles your data. Placeholder pending review.",
 };
 
 export default function PrivacyPage() {
@@ -11,8 +11,8 @@ export default function PrivacyPage() {
     <LegalPage title="Privacy Policy" lastUpdated="June 24, 2026">
       <LegalSection heading="Overview">
         <p>
-          MemePilot is a non-custodial Solana wallet — you own your keys and
-          your crypto. This page summarizes how the MemePilot website handles
+          ChadWallet is a non-custodial Solana wallet — you own your keys and
+          your crypto. This page summarizes how the ChadWallet website handles
           information. It is placeholder copy and will be replaced with our
           final, reviewed policy before launch.
         </p>
@@ -28,7 +28,7 @@ export default function PrivacyPage() {
 
       <LegalSection heading="Non-custodial by design">
         <p>
-          MemePilot never holds or transmits your private keys or seed phrase.
+          ChadWallet never holds or transmits your private keys or seed phrase.
           Wallet keys live with you (or your embedded-wallet provider) and never
           reach our servers.
         </p>

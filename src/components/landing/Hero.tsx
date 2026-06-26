@@ -34,7 +34,7 @@ export function Hero() {
           </h1>
 
           <p className="mt-5 max-w-[480px] text-[clamp(1rem,1.5vw,1.1875rem)] font-medium leading-relaxed text-cw-text-muted">
-            Get MemePilot today. Never miss the next breakout! Discover, follow
+            Get ChadWallet today. Never miss the next breakout! Discover, follow
             the smartest traders, and ape in seconds — no seed phrase.
           </p>
 
@@ -94,7 +94,7 @@ export function Hero() {
           <PhoneMockup
             label="Trading"
             screenshot={tokenScreen}
-            alt="MemePilot trading screen showing a live token price, chart and one-tap buy"
+            alt="ChadWallet trading screen showing a live token price, chart and one-tap buy"
             priority
             className="relative z-[1]"
           />
