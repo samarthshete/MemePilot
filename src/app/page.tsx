@@ -99,10 +99,12 @@ export default function Home() {
         <FinalCta />
       </main>
 
-      <SiteFooter />
+      {/* Bottom token banner — above the footer (mirrors the top ticker). Same
+          cached /api/trending source + hidden-tab pause; no extra BirdEye cost. */}
       <Suspense fallback={<TickerSkeleton position="bottom" />}>
         <LiveTickerData position="bottom" durationSeconds={38} />
       </Suspense>
+      <SiteFooter />
     </>
   );
 }
