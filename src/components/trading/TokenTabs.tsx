@@ -148,7 +148,8 @@ function HolderList({ holders }: { holders: Holder[] }) {
     <ol className="flex flex-col gap-1">
       {holders.map((h, i) => (
         <li
-          key={h.owner}
+          // owner is normally unique; index tiebreaker guards against any dupes.
+          key={`${h.owner}-${i}`}
           className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-white/5"
         >
           <span className="flex min-w-0 items-center gap-2">
@@ -174,9 +175,10 @@ function HolderList({ holders }: { holders: Holder[] }) {
 function TradeList({ trades }: { trades: Trade[] }) {
   return (
     <ol className="flex flex-col gap-1">
-      {trades.map((t) => (
+      {trades.map((t, i) => (
         <li
-          key={t.txHash}
+          // txHash isn't unique (multiple legs per tx) — index is the tiebreaker.
+          key={`${t.txHash}-${i}`}
           className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-white/5"
         >
           <span className="flex min-w-0 items-center gap-2">
