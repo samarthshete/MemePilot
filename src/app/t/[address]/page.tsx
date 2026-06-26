@@ -96,7 +96,8 @@ export default async function TradingPage({ params }: Params) {
             <PriceChart address={address} />
           </div>
 
-          <TokenTabs address={address} />
+          {/* key={address} → fresh state per token (clean load, no stale data) */}
+          <TokenTabs key={address} address={address} />
         </section>
 
         {/* RIGHT — buy/sell shell */}

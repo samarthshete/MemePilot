@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { formatCompact, formatUsdPrice, timeAgo } from "@/lib/format";
 
 type Holder = { owner: string; uiAmount: number; pctOfSupply: number | null };
@@ -39,12 +39,13 @@ export function TokenTabs({ address }: { address: string }) {
   const [tab, setTab] = useState<"holders" | "trades">("holders");
   const [holders, setHolders] = useState<Load<Holder>>({ status: "idle", items: [] });
   const [trades, setTrades] = useState<Load<Trade>>({ status: "idle", items: [] });
-  const holdersLoaded = useRef(false);
 
-  // Holders: fetch once when first viewed. Never polled.
+  // Holders: fetch when the tab is viewed (and on token change). Never polled.
+  // No persistent "loaded" ref — that deadlocked under strict-mode's double
+  // mount (the only fetch's setState got cancelled) and left stale data across
+  // token navigation. Server-cached (300s), so refetching on view is cheap.
   useEffect(() => {
-    if (tab !== "holders" || holdersLoaded.current) return;
-    holdersLoaded.current = true;
+    if (tab !== "holders") return;
     let active = true;
     void (async () => {
       const next = await load<Holder>(
