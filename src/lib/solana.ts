@@ -103,6 +103,38 @@ export type TokenBalance = {
   decimals: number;
 };
 
+const TOKEN_2022_PROGRAM = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEbn";
+
+/**
+ * Mint/freeze authority of an SPL mint (for the safety scorer). `*Active` = the
+ * authority is NOT renounced (still set). Returns null on RPC failure (e.g. the
+ * Alchemy origin allowlist blocks server reads — pre-live item) → degraded.
+ */
+export async function getMintAuthorities(mint: string): Promise<{
+  mintAuthorityActive: boolean;
+  freezeAuthorityActive: boolean;
+  isToken2022: boolean;
+} | null> {
+  try {
+    const res = await rpc<{
+      value: {
+        owner: string;
+        data: { parsed: { info: { mintAuthority: string | null; freezeAuthority: string | null } } };
+      } | null;
+    }>("getAccountInfo", [mint, { encoding: "jsonParsed" }]);
+    const info = res.value?.data?.parsed?.info;
+    if (!info) return null;
+    return {
+      mintAuthorityActive: info.mintAuthority != null,
+      freezeAuthorityActive: info.freezeAuthority != null,
+      isToken2022: res.value?.owner === TOKEN_2022_PROGRAM,
+    };
+  } catch (err) {
+    console.warn(`[mint] authority read failed for ${mint}: ${(err as Error).message}`);
+    return null;
+  }
+}
+
 /** Native SOL balance (NOT an SPL token account — uses getBalance). */
 export async function getSolBalance(owner: string): Promise<TokenBalance> {
   const res = await rpc<{ value: number }>("getBalance", [

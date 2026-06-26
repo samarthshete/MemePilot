@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useWallets } from "@privy-io/react-auth/solana";
 import { formatCompact, formatUsdPrice } from "@/lib/format";
 import { publicEnv } from "@/lib/public-env";
+import type { SafetyReport } from "@/lib/safety/types";
 import {
   BUY_PRESETS,
   MAX_BUY_USD,
@@ -13,6 +14,7 @@ import {
   SOL_MINT,
 } from "@/lib/trading-config";
 import { type Order, ReviewModal } from "./ReviewModal";
+import { SafetyBadge } from "./SafetyBadge";
 
 const SLIPPAGE_OPTIONS = [
   { bps: 50, label: "0.5%" },
@@ -189,6 +191,29 @@ function TradePanelInner({
   // Native SOL balance (null = unknown/not yet read) — gates BUY when ~empty.
   const [solBalance, setSolBalance] = useState<number | null>(null);
 
+  // Pre-trade safety report — fetched lazily (on amount focus / Review) and
+  // cached server-side. Token-level only; verified mints short-circuit to LOW.
+  const [safety, setSafety] = useState<SafetyReport | null>(null);
+  const [safetyLoading, setSafetyLoading] = useState(false);
+  const safetyReqRef = useRef<string | null>(null);
+
+  const fetchSafety = useCallback(() => {
+    if (safetyReqRef.current === address) return; // already fetched/in-flight
+    safetyReqRef.current = address;
+    setSafetyLoading(true);
+    void (async () => {
+      try {
+        const res = await fetch(`/api/safety?address=${encodeURIComponent(address)}`);
+        const data = (await res.json()) as SafetyReport;
+        setSafety(data);
+      } catch {
+        safetyReqRef.current = null; // allow a retry on the next focus
+      } finally {
+        setSafetyLoading(false);
+      }
+    })();
+  }, [address]);
+
   const refreshPosition = useCallback(async () => {
     if (!wallet) return;
     try {
@@ -347,7 +372,10 @@ function TradePanelInner({
         <button
           type="button"
           disabled={!(buyValid && wallet && buyQuote.status === "ready")}
-          onClick={() => setOrder({ side: "buy", amountUsd: buyUsd })}
+          onClick={() => {
+            fetchSafety();
+            setOrder({ side: "buy", amountUsd: buyUsd });
+          }}
           className={`${ACTION_BASE} bg-cw-green text-cw-bg hover:bg-cw-green-press disabled:cursor-not-allowed disabled:opacity-50`}
         >
           Review buy {symbol}
@@ -361,7 +389,10 @@ function TradePanelInner({
       <button
         type="button"
         disabled={!(wallet && sellRawAmount !== "0" && sellQuote.status === "ready")}
-        onClick={() => setOrder({ side: "sell", sellRawAmount })}
+        onClick={() => {
+          fetchSafety();
+          setOrder({ side: "sell", sellRawAmount });
+        }}
         className={`${ACTION_BASE} bg-cw-red text-cw-text hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50`}
       >
         Review sell {symbol}
@@ -378,6 +409,7 @@ function TradePanelInner({
           slippageBps={slippageBps}
           amount={buyAmount}
           onAmount={setBuyAmount}
+          onFocus={fetchSafety}
           quote={buyQuote}
           canReview
         />
@@ -395,6 +427,7 @@ function TradePanelInner({
             setSellExact(v);
             setSellPct(null);
           }}
+          onFocus={fetchSafety}
           sellTokens={sellTokens}
           quote={sellQuote}
         />
@@ -407,6 +440,8 @@ function TradePanelInner({
         <WalletHint address={wallet.address} message={`No ${symbol} to sell yet`} />
       )}
 
+      <SafetyBadge report={safety} loading={safetyLoading} />
+
       <div className="mt-4">{action}</div>
       <PositionBox qty={qty} valueUsd={valueUsd} symbol={symbol} />
 
@@ -417,6 +452,7 @@ function TradePanelInner({
           symbol={symbol}
           slippageBps={slippageBps}
           wallet={wallet}
+          safety={safety}
           onClose={() => setOrder(null)}
           onSuccess={() => void refreshPosition()}
         />
@@ -455,6 +491,7 @@ function computeSellRaw(
 function BuyControls({
   amount,
   onAmount,
+  onFocus,
   quote,
   symbol,
 }: {
@@ -463,6 +500,7 @@ function BuyControls({
   slippageBps: number;
   amount?: string;
   onAmount?: (v: string) => void;
+  onFocus?: () => void;
   quote?: Quote<BuyQuote>;
   canReview: boolean;
 }) {
@@ -477,6 +515,7 @@ function BuyControls({
           inputMode="decimal"
           value={amount ?? ""}
           onChange={(e) => onAmount?.(e.target.value.replace(/[^0-9.]/g, ""))}
+          onFocus={onFocus}
           placeholder="0.00"
           className="mt-1.5 w-full rounded-xl border border-white/12 bg-cw-bg px-3 py-2.5 font-mono text-lg text-cw-text outline-none focus-visible:border-cw-green"
         />
@@ -505,6 +544,7 @@ function SellControls({
   onPct,
   sellExact,
   onExact,
+  onFocus,
   sellTokens,
   quote,
 }: {
@@ -514,6 +554,7 @@ function SellControls({
   onPct: (p: number) => void;
   sellExact: string;
   onExact: (v: string) => void;
+  onFocus?: () => void;
   sellTokens: number;
   quote: Quote<SellQuote>;
 }) {
@@ -529,7 +570,10 @@ function SellControls({
               key={p}
               type="button"
               disabled={disabled}
-              onClick={() => onPct(p)}
+              onClick={() => {
+                onFocus?.();
+                onPct(p);
+              }}
               aria-pressed={sellPct === p}
               className={`flex-1 rounded-lg border py-1.5 font-mono text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cw-green disabled:cursor-not-allowed disabled:opacity-40 ${
                 sellPct === p
@@ -546,6 +590,7 @@ function SellControls({
           disabled={disabled}
           value={sellExact}
           onChange={(e) => onExact(e.target.value.replace(/[^0-9.]/g, ""))}
+          onFocus={onFocus}
           placeholder={`Exact ${symbol} amount (optional)`}
           className="mt-2 w-full rounded-xl border border-white/12 bg-cw-bg px-3 py-2 font-mono text-sm text-cw-text outline-none focus-visible:border-cw-green disabled:opacity-40"
         />

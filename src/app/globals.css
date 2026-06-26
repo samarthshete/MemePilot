@@ -17,6 +17,8 @@
   --color-cw-green: #11fe9c; /* PRIMARY: buy, CTAs, positive % */
   --color-cw-green-press: #10e48c; /* pressed/hover */
   --color-cw-red: #ff4334; /* sell, negative %, down */
+  --color-cw-amber: #f5b031; /* safety: MEDIUM risk */
+  --color-cw-orange: #ff7a3c; /* safety: HIGH risk */
   --color-cw-text: #ffffff; /* primary text */
   --color-cw-text-muted: #8a93a6; /* secondary text */
   --color-cw-splash-bg: #ffffff; /* splash background */

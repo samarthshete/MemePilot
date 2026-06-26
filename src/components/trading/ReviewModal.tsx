@@ -5,6 +5,8 @@ import type { ConnectedStandardSolanaWallet } from "@privy-io/react-auth/solana"
 import { useSignTransaction } from "@privy-io/react-auth/solana";
 import { formatCompact, formatUsdPrice } from "@/lib/format";
 import { RISK_CHECKBOX_A2, RISK_DISCLAIMER_A1 } from "@/lib/legal-copy";
+import type { SafetyReport } from "@/lib/safety/types";
+import { effectiveLevel, SafetyBadge } from "./SafetyBadge";
 
 const RISK_KEY = "memepilot:risk-accepted-v1";
 
@@ -72,6 +74,7 @@ export function ReviewModal({
   symbol,
   slippageBps,
   wallet,
+  safety,
   onClose,
   onSuccess,
 }: {
@@ -80,6 +83,7 @@ export function ReviewModal({
   symbol: string;
   slippageBps: number;
   wallet: ConnectedStandardSolanaWallet;
+  safety: SafetyReport | null;
   onClose: () => void;
   onSuccess: () => void;
 }) {
@@ -88,6 +92,7 @@ export function ReviewModal({
   const [summary, setSummary] = useState<Summary | null>(null);
   const [swapTx, setSwapTx] = useState<string | null>(null);
   const [accepted, setAccepted] = useState(false);
+  const [highRiskAccepted, setHighRiskAccepted] = useState(false);
   const [signature, setSignature] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string>("unavailable");
 
@@ -140,8 +145,13 @@ export function ReviewModal({
     };
   }, [order, address, slippageBps, wallet.address]);
 
+  const safetyLevel = safety ? effectiveLevel(safety) : null;
+  const blocked = safetyLevel === "CRITICAL";
+  const needsHighRiskAck = safetyLevel === "HIGH";
+  const canConfirm = accepted && !blocked && (!needsHighRiskAck || highRiskAccepted);
+
   const confirmAndSign = async () => {
-    if (!swapTx) return;
+    if (!swapTx || blocked) return; // CRITICAL → never open the wallet
     try {
       localStorage.setItem(RISK_KEY, "1");
     } catch {
@@ -272,6 +282,15 @@ export function ReviewModal({
               </p>
             )}
 
+            <SafetyBadge report={safety} />
+
+            {blocked && (
+              <p className="mt-3 rounded-xl border border-cw-red/40 bg-cw-red/10 p-3 text-xs font-semibold text-cw-red">
+                This token failed a critical safety check (e.g. no sell route).
+                Trading is blocked.
+              </p>
+            )}
+
             <p className="mt-4 text-xs leading-relaxed text-cw-text-muted">
               {RISK_DISCLAIMER_A1}
             </p>
@@ -286,6 +305,19 @@ export function ReviewModal({
               <span>{RISK_CHECKBOX_A2}</span>
             </label>
 
+            {needsHighRiskAck && (
+              <label className="mt-2 flex items-start gap-2 text-xs text-cw-text">
+                <input
+                  type="checkbox"
+                  checked={highRiskAccepted}
+                  disabled={inFlight}
+                  onChange={(e) => setHighRiskAccepted(e.target.checked)}
+                  className="mt-0.5 accent-cw-orange"
+                />
+                <span>I understand this token is high-risk and want to proceed.</span>
+              </label>
+            )}
+
             <div className="mt-5 flex gap-2">
               <button
                 type="button"
@@ -298,14 +330,16 @@ export function ReviewModal({
               <button
                 type="button"
                 onClick={confirmAndSign}
-                disabled={!accepted || inFlight}
+                disabled={!canConfirm || inFlight}
                 className="flex-1 rounded-full bg-cw-green py-2.5 text-sm font-extrabold text-cw-bg hover:bg-cw-green-press disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {phase === "signing"
-                  ? "Approve in wallet…"
-                  : phase === "sending"
-                    ? "Submitting…"
-                    : "Confirm & Sign"}
+                {blocked
+                  ? "Trading blocked"
+                  : phase === "signing"
+                    ? "Approve in wallet…"
+                    : phase === "sending"
+                      ? "Submitting…"
+                      : "Confirm & Sign"}
               </button>
             </div>
           </>

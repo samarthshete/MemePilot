@@ -242,13 +242,20 @@ const overviewSchema = z.object({
       totalSupply: z.number().nullish(),
       circulatingSupply: z.number().nullish(),
       decimals: z.number().nullish(),
+      liquidity: z.number().nullish(),
+      holder: z.number().nullish(),
     })
     .nullish(),
 });
 
-type TokenOverview = { supply: number | null; decimals: number | null };
+type TokenOverview = {
+  supply: number | null;
+  decimals: number | null;
+  liquidityUsd: number | null;
+  holderCount: number | null;
+};
 
-/** token_overview (supply + decimals), cached 1h — both barely change. */
+/** token_overview (supply, decimals, liquidity, holder count), cached 1h. */
 function getTokenOverview(address: string): Promise<TokenOverview> {
   return getOrSet(`token:overview:${address}`, 3_600_000, async () => {
     try {
@@ -260,12 +267,22 @@ function getTokenOverview(address: string): Promise<TokenOverview> {
       return {
         supply: ov.data?.totalSupply ?? ov.data?.circulatingSupply ?? null,
         decimals: ov.data?.decimals ?? null,
+        liquidityUsd: ov.data?.liquidity ?? null,
+        holderCount: ov.data?.holder ?? null,
       };
     } catch (err) {
       console.warn(`[token] overview fetch failed for ${address}: ${(err as Error).message}`);
-      return { supply: null, decimals: null };
+      return { supply: null, decimals: null, liquidityUsd: null, holderCount: null };
     }
   });
+}
+
+/** Market meta for the safety scorer (reuses the cached token_overview). */
+export async function getTokenMarket(
+  address: string,
+): Promise<{ liquidityUsd: number | null; holderCount: number | null }> {
+  const ov = await getTokenOverview(address);
+  return { liquidityUsd: ov.liquidityUsd, holderCount: ov.holderCount };
 }
 
 /** Token decimals (for converting raw amounts to UI amounts). Null if unknown. */
@@ -336,4 +353,56 @@ export async function getRecentTrades(
     unixTime: t.block_unix_time,
     txHash: t.tx_hash,
   }));
+}
+
+/* ----------------------------- Token security ----------------------------- */
+/*
+ * /defi/token_security — ENRICHMENT ONLY. Gated on the BirdEye free plan
+ * (verified: HTTP 401). On any failure we return null so the safety score
+ * degrades gracefully (these fields just go unknown) — never throws.
+ */
+export type TokenSecurity = {
+  mutableMetadata: boolean | null;
+  transferFeeBps: number | null;
+  isToken2022: boolean | null;
+};
+
+const securitySchema = z.object({
+  success: z.boolean(),
+  data: z
+    .looseObject({
+      mutableMetadata: z.boolean().nullish(),
+      isToken2022: z.boolean().nullish(),
+      transferFeeEnable: z.boolean().nullish(),
+      transferFeeData: z
+        .looseObject({
+          newerTransferFee: z
+            .looseObject({ transferFeeBasisPoints: z.coerce.number().nullish() })
+            .nullish(),
+        })
+        .nullish(),
+    })
+    .nullish(),
+});
+
+export async function getTokenSecurity(
+  address: string,
+): Promise<TokenSecurity | null> {
+  try {
+    const json = securitySchema.parse(
+      await withRetry(() =>
+        birdeyeGet(`/defi/token_security?address=${encodeURIComponent(address)}`),
+      ),
+    );
+    const d = json.data;
+    if (!d) return null;
+    return {
+      mutableMetadata: d.mutableMetadata ?? null,
+      transferFeeBps: d.transferFeeData?.newerTransferFee?.transferFeeBasisPoints ?? null,
+      isToken2022: d.isToken2022 ?? null,
+    };
+  } catch (err) {
+    console.warn(`[security] token_security unavailable (${(err as Error).message})`);
+    return null;
+  }
 }
