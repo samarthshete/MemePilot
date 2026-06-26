@@ -51,9 +51,10 @@ Status key: ⬜ not started · 🟦 in progress · ✅ done · ⛔ blocked
   - ✅ verified: real data, 1 upstream call per window (holders/trades), no key/BirdEye URL in client bundle
 - 🟦 **Stage 6 — Buy & Sell** (Jupiter quote/build → Privy sign → Alchemy send → position)
   - ✅ **6a quote-only**: `src/lib/jupiter.ts` + `POST /api/quote` (Jupiter `lite-api.jup.ag/swap/v1/quote`, keyless free; pro host if `JUPITER_API_KEY`), USD→SOL via BirdEye, decimals via token_overview, cached 12s + retry; right-panel quote preview (pay/receive/impact/slippage/min-received/route) debounced on amount+slippage. NO swap/sign/send. ADR-021
-  - 🟦 **6b buy execution (built; on-chain test pending)**: `POST /api/swap/build` (Jupiter swap-build, MAX_BUY_USD=$5 server-enforced) → client signs in Privy (`useSignTransaction`, user approves) → `POST /api/swap/send` relays signed bytes via server-only `SOLANA_RPC_URL` + confirms → position via `getTokenAccountsByOwner`. Review modal (amounts + first-trade risk checkbox), /risk + /terms legal mechanism (DRAFT copy), fee-ready/$0, SELL deferred. ADR-022
-    - ✅ verified: build returns a real signable tx; cap enforced server-side; server never signs/holds keys; no key/host in client bundle
-    - ⚠️ blocked for live test: Alchemy `SOLANA_RPC_URL` key has an origin allowlist that rejects server calls (fix in Alchemy dashboard); + needs a funded wallet + browser signature (not run by tooling)
+  - 🟦 **6b buy execution — BUILD-COMPLETE, NOT LIVE-VERIFIED (no on-chain test tx yet)**: `POST /api/swap/build` (Jupiter swap-build, MAX_BUY_USD=$5 server-enforced) → client signs in Privy (`useSignTransaction`, user approves) → `POST /api/swap/send` relays signed bytes via server-only `SOLANA_RPC_URL` + confirms → position via `getTokenAccountsByOwner`. Review modal (amounts + first-trade risk checkbox), /risk + /terms legal mechanism (DRAFT copy), fee-ready/$0, SELL deferred. ADR-022
+    - ✅ verified mechanically: build returns a real signable tx; cap enforced server-side; server never signs/holds keys; no key/host in client bundle
+    - ⏳ **to verify later:** fund a Privy wallet, run a ~$1 SOL→USDC buy, confirm the tx signature + position update — then flip this to ✅
+    - ⚠️ pre-live blockers: Alchemy `SOLANA_RPC_URL` key has an origin allowlist that rejects server calls (fix in Alchemy dashboard); + needs a funded wallet + browser signature (not run by tooling)
 
 ---
 
