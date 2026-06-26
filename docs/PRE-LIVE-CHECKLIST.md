@@ -134,6 +134,13 @@ ADR-017). The ticker, OHLCV chart, holders, and trades all draw on it.
       (ADR-016) so the existing links keep working until the listing is renamed.
 - [ ] **Update `public/brand/logo-mark.svg`** internal `aria-label="ChadWallet"` →
       `"MemePilot"` (not user-facing — the mark renders via CSS mask — but tidy).
+- [ ] **STALE BRAND ARTIFACT — landing screenshot.** `public/brand/app-store/portfolio.png`
+      (Feature #04 "Track your assets", `src/app/page.tsx`) shows a Holdings row literally
+      named **"ChadWallet"** (173.7M, $693.29) while the product wordmark is MemePilot.
+      It's a captured app screenshot, so it can't be cleanly text-edited. **Decide:** (a) swap
+      for a MemePilot-branded capture, (b) crop the Holdings row out, or (c) accept it until
+      the mobile app is rebranded (consistent with leaving the store listings as ChadWallet,
+      ADR-016). Flagged only — not silently edited.
 - [ ] Replace the placeholder OG image / brand mark with final art if desired (the OG
       card is generated dynamically via `next/og` and is on-brand but generic).
 - [ ] Consider rotating the Alchemy key if it was ever built into a deployed bundle
