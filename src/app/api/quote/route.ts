@@ -3,27 +3,34 @@ import { z } from "zod";
 import { getTickerPrices, getTokenDecimals } from "@/lib/birdeye";
 import { getOrSet } from "@/lib/cache";
 import { getQuote } from "@/lib/jupiter";
+import { SOL_DECIMALS, SOL_MINT } from "@/lib/trading-config";
 
 /**
- * QUOTE ONLY (Stage 6a) — proves the route/fees/slippage pipeline with zero
- * money risk. NEVER calls /swap, builds a transaction, or signs. Cached ~12s per
- * (address, amountUsd, slippage) → one Jupiter call per window. Always returns a
- * clean shape; failures are typed ({ ok:false, error }) so the UI never crashes.
+ * QUOTE ONLY — proves route/fees/slippage with zero money risk. NEVER calls
+ * /swap, builds a tx, or signs. BUY sizes from USD (→ SOL in); SELL sizes from a
+ * raw token amount (token → SOL out). Cached ~12s per inputs → one Jupiter call
+ * per window. Always returns a typed shape; never crashes.
  */
-const SOL_MINT = "So11111111111111111111111111111111111111112";
-const SOL_DECIMALS = 9;
 const DEFAULT_SLIPPAGE_BPS = 50;
 
-const bodySchema = z.object({
-  address: z.string().min(32),
-  amountUsd: z.number().positive().max(1_000_000),
-  side: z.enum(["buy", "sell"]),
-  slippageBps: z.number().int().min(1).max(5000).optional(),
-});
+const slippage = z.number().int().min(1).max(5000).optional();
+const bodySchema = z.discriminatedUnion("side", [
+  z.object({
+    side: z.literal("buy"),
+    address: z.string().min(32),
+    amountUsd: z.number().positive().max(1_000_000),
+    slippageBps: slippage,
+  }),
+  z.object({
+    side: z.literal("sell"),
+    address: z.string().min(32),
+    sellRawAmount: z.string().regex(/^[1-9]\d*$/), // positive integer string
+    slippageBps: slippage,
+  }),
+]);
 
 type HttpError = { status?: number };
 
-/** SOL price cached 30s so different amounts don't each re-hit BirdEye. */
 function getSolPrice(): Promise<number | null> {
   return getOrSet("price:SOL", 30_000, async () => {
     try {
@@ -34,54 +41,69 @@ function getSolPrice(): Promise<number | null> {
   });
 }
 
+function routeLabelsOf(routePlan: { swapInfo?: { label?: string } }[] | undefined) {
+  return (routePlan ?? [])
+    .map((r) => r.swapInfo?.label)
+    .filter((l): l is string => Boolean(l));
+}
+
 export async function POST(request: Request) {
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ ok: false, error: "bad_request" }, { status: 400 });
   }
-  const { address, amountUsd, side } = parsed.data;
-  const slippageBps = parsed.data.slippageBps ?? DEFAULT_SLIPPAGE_BPS;
-
-  // Sell needs a real position to size from — deferred to Stage 6b.
-  if (side === "sell") {
-    return NextResponse.json({ ok: false, error: "sell_unavailable" });
-  }
+  const body = parsed.data;
+  const slippageBps = body.slippageBps ?? DEFAULT_SLIPPAGE_BPS;
+  const { address } = body;
 
   try {
+    if (body.side === "buy") {
+      const result = await getOrSet(
+        `quote:buy:${address}:${body.amountUsd}:${slippageBps}`,
+        12_000,
+        async () => {
+          const solPrice = await getSolPrice();
+          if (!solPrice) throw new Error("sol price unavailable");
+          const decimals = await getTokenDecimals(address);
+          if (decimals == null) throw new Error("token decimals unavailable");
+          const lamports = Math.round((body.amountUsd / solPrice) * 10 ** SOL_DECIMALS);
+          console.info(`[quote] cache miss → Jupiter buy ${address} $${body.amountUsd} ${slippageBps}bps`);
+          const q = await getQuote({ inputMint: SOL_MINT, outputMint: address, amount: lamports, slippageBps });
+          return {
+            ok: true as const,
+            side: "buy" as const,
+            payUsd: body.amountUsd,
+            paySol: lamports / 10 ** SOL_DECIMALS,
+            receive: Number(q.outAmount) / 10 ** decimals,
+            minReceived: Number(q.otherAmountThreshold) / 10 ** decimals,
+            priceImpactPct: Number(q.priceImpactPct) * 100,
+            slippageBps: q.slippageBps,
+            routeLabels: routeLabelsOf(q.routePlan),
+          };
+        },
+      );
+      return NextResponse.json(result);
+    }
+
+    // SELL: token → SOL, sized by raw token amount.
     const result = await getOrSet(
-      `quote:buy:${address}:${amountUsd}:${slippageBps}`,
+      `quote:sell:${address}:${body.sellRawAmount}:${slippageBps}`,
       12_000,
       async () => {
         const solPrice = await getSolPrice();
-        if (!solPrice) throw new Error("sol price unavailable");
-        const decimals = await getTokenDecimals(address);
-        if (decimals == null) throw new Error("token decimals unavailable");
-
-        const lamports = Math.round((amountUsd / solPrice) * 10 ** SOL_DECIMALS);
-        console.info(
-          `[quote] cache miss → Jupiter buy ${address} $${amountUsd} ${slippageBps}bps`,
-        );
-        const q = await getQuote({
-          inputMint: SOL_MINT,
-          outputMint: address,
-          amount: lamports,
-          slippageBps,
-        });
-
-        const routeLabels = (q.routePlan ?? [])
-          .map((r) => r.swapInfo?.label)
-          .filter((l): l is string => Boolean(l));
-
+        console.info(`[quote] cache miss → Jupiter sell ${address} ${body.sellRawAmount} ${slippageBps}bps`);
+        const q = await getQuote({ inputMint: address, outputMint: SOL_MINT, amount: body.sellRawAmount, slippageBps });
+        const receiveSol = Number(q.outAmount) / 10 ** SOL_DECIMALS;
+        const minSol = Number(q.otherAmountThreshold) / 10 ** SOL_DECIMALS;
         return {
           ok: true as const,
-          side: "buy" as const,
-          payUsd: amountUsd,
-          paySol: lamports / 10 ** SOL_DECIMALS,
-          receive: Number(q.outAmount) / 10 ** decimals,
-          minReceived: Number(q.otherAmountThreshold) / 10 ** decimals,
+          side: "sell" as const,
+          receiveSol,
+          receiveUsd: solPrice ? receiveSol * solPrice : null,
+          minReceivedSol: minSol,
           priceImpactPct: Number(q.priceImpactPct) * 100,
           slippageBps: q.slippageBps,
-          routeLabels,
+          routeLabels: routeLabelsOf(q.routePlan),
         };
       },
     );
@@ -89,7 +111,7 @@ export async function POST(request: Request) {
   } catch (err) {
     const status = (err as HttpError).status;
     const error = status === 400 || status === 422 ? "no_route" : "unavailable";
-    console.warn(`[quote] failed ${address} $${amountUsd}: ${(err as Error).message}`);
+    console.warn(`[quote] failed ${address}: ${(err as Error).message}`);
     return NextResponse.json({ ok: false, error });
   }
 }

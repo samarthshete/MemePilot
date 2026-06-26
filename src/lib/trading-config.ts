@@ -4,8 +4,14 @@
 /** Hard cap for BUY execution this stage — TINY amounts only (Stage 6b). */
 export const MAX_BUY_USD = 5;
 
+/** Hard cap for SELL proceeds (USD-equivalent) this stage — TINY only (Stage 6c). */
+export const MAX_SELL_USD = 5;
+
 /** Buy amount presets, all within MAX_BUY_USD. */
 export const BUY_PRESETS = [1, 3, 5];
+
+/** Sell sizing presets — percentages of the user's position (100 = Max). */
+export const SELL_PCT_PRESETS = [25, 50, 100];
 
 export const DEFAULT_SLIPPAGE_BPS = 50;
 

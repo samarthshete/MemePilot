@@ -168,6 +168,13 @@ Format: `ADR-NNN — Title` · Status · Date · Context · Decision · Conseque
   2. **Alchemy server key**: remove the origin/referrer allowlist on `SOLANA_RPC_URL` (or use a server-scoped key) so `/api/swap/send` + `/api/position` work server-side.
   3. **Live verification**: fund a Privy wallet and complete a ~$1 SOL→USDC buy end-to-end; confirm the tx signature + position update before marking 6b ✅.
 
+### ADR-023 — SELL execution: position-sized, server-validated, reuses the 6b pipeline
+
+- **Status:** Accepted · **Date:** 2026-06-25
+- **Context:** Stage 6c adds SELL (token→SOL) — same safety invariants as 6b (user signs in Privy, server relay-only, review-before-sign, in-flight disable). The only real new piece is sizing from an actual on-chain position rather than a USD field.
+- **Decision:** Sizing reads the signed-in wallet's balance via the existing server position route (`getTokenAccountsByOwner` over server-only `SOLANA_RPC_URL`), now returning **raw amount (string) + decimals + uiAmount + USD**. Sell amount = **%-presets (25% / 50% / Max=100%)** or an optional exact-token input, computed with **BigInt** and capped at the real balance (never oversell); 0 balance → disabled "No <SYMBOL> to sell". Quote flips direction (`inputMint=token, outputMint=SOL`) via the same `getQuote` (amount widened to accept a string for memecoin raw amounts > 2^53). `POST /api/swap/build` (side `sell`): **re-reads the balance and rejects `sellRawAmount > balance` server-side**, quotes token→SOL, **caps by USD-equivalent of proceeds (`MAX_SELL_USD=$5`)**, then builds. The same `ReviewModal` (now side-aware) signs in Privy and relays via `/api/swap/send`. Fee-ready/$0, SELL has no platform fee enabled. Review/risk-checkbox reused from 6b (not re-gated once accepted).
+- **Consequences:** Sell is feature-complete and symmetric with buy; server is the source of truth for balance + caps. **Verified mechanically (no live tx — wallet unfunded):** sell `/api/swap/build` returns a real **539-byte VersionedTransaction** (sample 200k BONK → 0.012 SOL); `amount_capped` and `exceeds_balance` return typed errors; signing client-only; no keys/host in client bundle. **Same pre-live blocker as 6b:** the production Alchemy `SOLANA_RPC_URL` origin allowlist must be lifted for the server balance read + relay (the build path was verified by pointing the test server at a keyless public RPC). Edge cases handled: 0 balance, dust (→ no_route), 100% close, no-SOL-route token, balance-fetch failure → typed errors, never a dead UI.
+
 ---
 
 ## Proposed / open (not yet decided)

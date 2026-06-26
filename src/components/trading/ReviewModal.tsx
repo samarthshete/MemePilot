@@ -8,7 +8,8 @@ import { RISK_CHECKBOX_A2, RISK_DISCLAIMER_A1 } from "@/lib/legal-copy";
 
 const RISK_KEY = "memepilot:risk-accepted-v1";
 
-type Summary = {
+type BuySummary = {
+  side: "buy";
   payUsd: number;
   paySol: number;
   receive: number;
@@ -17,13 +18,24 @@ type Summary = {
   slippageBps: number;
   routeLabels: string[];
 };
-type Phase =
-  | "building"
-  | "review"
-  | "signing"
-  | "sending"
-  | "success"
-  | "error";
+type SellSummary = {
+  side: "sell";
+  sellTokens: number;
+  receiveSol: number;
+  receiveUsd: number | null;
+  minReceivedSol: number;
+  priceImpactPct: number;
+  slippageBps: number;
+  routeLabels: string[];
+};
+type Summary = BuySummary | SellSummary;
+
+/** Discriminated order passed in from the panel. */
+export type Order =
+  | { side: "buy"; amountUsd: number }
+  | { side: "sell"; sellRawAmount: string };
+
+type Phase = "building" | "review" | "signing" | "sending" | "success" | "error";
 
 function base64ToBytes(b64: string): Uint8Array {
   const bin = atob(b64);
@@ -39,9 +51,10 @@ function bytesToBase64(bytes: Uint8Array): string {
 
 const ERROR_COPY: Record<string, string> = {
   amount_capped: "Amount exceeds the current per-trade cap.",
+  exceeds_balance: "That’s more than your balance.",
   no_route: "No route for this amount — try a different size.",
-  blockhash_expired: "Quote expired — re-quote and try again.",
-  insufficient_funds: "Insufficient SOL for this swap plus fees.",
+  blockhash_expired: "Quote expired — please re-quote and try again.",
+  insufficient_funds: "Insufficient funds for this swap plus fees.",
   slippage_exceeded: "Price moved past your slippage — re-quote and retry.",
   tx_failed: "The transaction failed on-chain.",
 };
@@ -49,22 +62,22 @@ const errorText = (code: string) =>
   ERROR_COPY[code] ?? "Something went wrong — please try again.";
 
 /**
- * BUY review + execution. Builds a fresh tx, shows the review + first-trade risk
- * checkbox, then: user signs in Privy (client-side) → we POST the SIGNED bytes
- * to /api/swap/send (server relays + confirms). The server never signs.
+ * BUY/SELL review + execution. Builds a fresh tx, shows the review + first-trade
+ * risk checkbox, then: user signs in Privy (client) → POST the SIGNED bytes to
+ * /api/swap/send (server relays + confirms). The server never signs.
  */
 export function ReviewModal({
+  order,
   address,
   symbol,
-  amountUsd,
   slippageBps,
   wallet,
   onClose,
   onSuccess,
 }: {
+  order: Order;
   address: string;
   symbol: string;
-  amountUsd: number;
   slippageBps: number;
   wallet: ConnectedStandardSolanaWallet;
   onClose: () => void;
@@ -78,9 +91,6 @@ export function ReviewModal({
   const [signature, setSignature] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string>("unavailable");
 
-  // Pre-accepted (not the first trade) → skip the checkbox requirement.
-  // Deferred (setTimeout) so it isn't a synchronous setState in the effect body,
-  // and so SSR/first render matches (accepted starts false, no hydration jump).
   useEffect(() => {
     let preAccepted = false;
     try {
@@ -93,20 +103,18 @@ export function ReviewModal({
     return () => clearTimeout(id);
   }, []);
 
-  // Build a fresh tx on open.
   useEffect(() => {
     let active = true;
     void (async () => {
       try {
+        const reqBody =
+          order.side === "buy"
+            ? { side: "buy", address, amountUsd: order.amountUsd, slippageBps, userPublicKey: wallet.address }
+            : { side: "sell", address, sellRawAmount: order.sellRawAmount, slippageBps, userPublicKey: wallet.address };
         const res = await fetch("/api/swap/build", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            address,
-            amountUsd,
-            slippageBps,
-            userPublicKey: wallet.address,
-          }),
+          body: JSON.stringify(reqBody),
         });
         const data = (await res.json()) as
           | { ok: true; swapTransactionBase64: string; summary: Summary }
@@ -130,7 +138,7 @@ export function ReviewModal({
     return () => {
       active = false;
     };
-  }, [address, amountUsd, slippageBps, wallet.address]);
+  }, [order, address, slippageBps, wallet.address]);
 
   const confirmAndSign = async () => {
     if (!swapTx) return;
@@ -165,7 +173,6 @@ export function ReviewModal({
         setPhase("error");
       }
     } catch (err) {
-      // User rejected the Privy signature prompt, or signing failed.
       const msg = (err as Error)?.message?.toLowerCase() ?? "";
       setErrorCode(msg.includes("reject") || msg.includes("cancel") ? "rejected" : "sign_failed");
       setPhase("error");
@@ -173,12 +180,13 @@ export function ReviewModal({
   };
 
   const inFlight = phase === "signing" || phase === "sending";
+  const verb = order.side === "buy" ? "buy" : "sell";
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Review buy ${symbol}`}
+      aria-label={`Review ${verb} ${symbol}`}
       className="fixed inset-0 z-50 grid place-items-center p-4"
     >
       <button
@@ -188,7 +196,9 @@ export function ReviewModal({
         className="absolute inset-0 cursor-default bg-black/60"
       />
       <div className="relative w-full max-w-sm rounded-2xl border border-white/10 bg-cw-surface p-5 shadow-2xl">
-        <h2 className="text-lg font-black tracking-[-0.02em]">Review buy {symbol}</h2>
+        <h2 className="text-lg font-black capitalize tracking-[-0.02em]">
+          Review {verb} {symbol}
+        </h2>
 
         {phase === "building" && (
           <p className="mt-4 font-mono text-sm text-cw-text-muted">
@@ -199,30 +209,26 @@ export function ReviewModal({
         {phase === "error" && (
           <>
             <p className="mt-4 text-sm text-cw-red">
-              {errorCode === "rejected"
-                ? "Signature cancelled."
-                : errorText(errorCode)}
+              {errorCode === "rejected" ? "Signature cancelled." : errorText(errorCode)}
             </p>
             {signature && <ExplorerLink signature={signature} />}
-            <div className="mt-5 flex gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 rounded-full border border-white/16 py-2.5 text-sm font-bold text-cw-text hover:border-white/40"
-              >
-                Close
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-5 w-full rounded-full border border-white/16 py-2.5 text-sm font-bold text-cw-text hover:border-white/40"
+            >
+              Close
+            </button>
           </>
         )}
 
         {phase === "success" && signature && (
           <>
-            <p className="mt-4 text-sm font-bold text-cw-green">
-              Swap confirmed ✓
-            </p>
+            <p className="mt-4 text-sm font-bold text-cw-green">Swap confirmed ✓</p>
             <p className="mt-1 text-sm text-cw-text-muted">
-              You bought ≈ {summary ? formatCompact(summary.receive) : ""} {symbol}.
+              {summary?.side === "sell"
+                ? `Sold ${formatCompact(summary.sellTokens)} ${symbol} for ≈ ${summary.receiveSol.toFixed(4)} SOL.`
+                : `Bought ≈ ${summary && summary.side === "buy" ? formatCompact(summary.receive) : ""} ${symbol}.`}
             </p>
             <ExplorerLink signature={signature} />
             <button
@@ -235,63 +241,75 @@ export function ReviewModal({
           </>
         )}
 
-        {(phase === "review" || phase === "signing" || phase === "sending") &&
-          summary && (
-            <>
-              <dl className="mt-4 space-y-1 text-sm">
-                <Line label="You pay" value={`${formatUsdPrice(summary.payUsd)} · ${summary.paySol.toFixed(4)} SOL`} />
-                <Line label={`You receive ≈`} value={`${formatCompact(summary.receive)} ${symbol}`} strong />
-                <Line label="Min received" value={`${formatCompact(summary.minReceived)} ${symbol}`} />
-                <Line label="Price impact" value={`${summary.priceImpactPct.toFixed(2)}%`} />
-                <Line label="Slippage" value={`${(summary.slippageBps / 100).toFixed(2)}%`} />
-                <Line label="Network fee" value="≈ 0.00005 SOL (est.)" />
-                <Line label="Platform fee" value="$0.00" />
-              </dl>
-              {summary.routeLabels.length > 0 && (
-                <p className="mt-2 font-mono text-[11px] text-cw-text-muted">
-                  Route via {summary.routeLabels.join(" → ")}
-                </p>
+        {(phase === "review" || inFlight) && summary && (
+          <>
+            <dl className="mt-4 space-y-1 text-sm">
+              {summary.side === "buy" ? (
+                <>
+                  <Line label="You pay" value={`${formatUsdPrice(summary.payUsd)} · ${summary.paySol.toFixed(4)} SOL`} />
+                  <Line label="You receive ≈" value={`${formatCompact(summary.receive)} ${symbol}`} strong />
+                  <Line label="Min received" value={`${formatCompact(summary.minReceived)} ${symbol}`} />
+                </>
+              ) : (
+                <>
+                  <Line label="You sell" value={`${formatCompact(summary.sellTokens)} ${symbol}`} />
+                  <Line
+                    label="You receive ≈"
+                    value={`${summary.receiveSol.toFixed(4)} SOL${summary.receiveUsd != null ? ` (≈ ${formatUsdPrice(summary.receiveUsd)})` : ""}`}
+                    strong
+                  />
+                  <Line label="Min received" value={`${summary.minReceivedSol.toFixed(4)} SOL`} />
+                </>
               )}
-
-              <p className="mt-4 text-xs leading-relaxed text-cw-text-muted">
-                {RISK_DISCLAIMER_A1}
+              <Line label="Price impact" value={`${summary.priceImpactPct.toFixed(2)}%`} />
+              <Line label="Slippage" value={`${(summary.slippageBps / 100).toFixed(2)}%`} />
+              <Line label="Network fee" value="≈ 0.00005 SOL (est.)" />
+              <Line label="Platform fee" value="$0.00" />
+            </dl>
+            {summary.routeLabels.length > 0 && (
+              <p className="mt-2 font-mono text-[11px] text-cw-text-muted">
+                Route via {summary.routeLabels.join(" → ")}
               </p>
+            )}
 
-              <label className="mt-3 flex items-start gap-2 text-xs text-cw-text">
-                <input
-                  type="checkbox"
-                  checked={accepted}
-                  disabled={inFlight}
-                  onChange={(e) => setAccepted(e.target.checked)}
-                  className="mt-0.5 accent-cw-green"
-                />
-                <span>{RISK_CHECKBOX_A2}</span>
-              </label>
+            <p className="mt-4 text-xs leading-relaxed text-cw-text-muted">
+              {RISK_DISCLAIMER_A1}
+            </p>
+            <label className="mt-3 flex items-start gap-2 text-xs text-cw-text">
+              <input
+                type="checkbox"
+                checked={accepted}
+                disabled={inFlight}
+                onChange={(e) => setAccepted(e.target.checked)}
+                className="mt-0.5 accent-cw-green"
+              />
+              <span>{RISK_CHECKBOX_A2}</span>
+            </label>
 
-              <div className="mt-5 flex gap-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  disabled={inFlight}
-                  className="flex-1 rounded-full border border-white/16 py-2.5 text-sm font-bold text-cw-text hover:border-white/40 disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmAndSign}
-                  disabled={!accepted || inFlight}
-                  className="flex-1 rounded-full bg-cw-green py-2.5 text-sm font-extrabold text-cw-bg hover:bg-cw-green-press disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {phase === "signing"
-                    ? "Approve in wallet…"
-                    : phase === "sending"
-                      ? "Submitting…"
-                      : "Confirm & Sign"}
-                </button>
-              </div>
-            </>
-          )}
+            <div className="mt-5 flex gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={inFlight}
+                className="flex-1 rounded-full border border-white/16 py-2.5 text-sm font-bold text-cw-text hover:border-white/40 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmAndSign}
+                disabled={!accepted || inFlight}
+                className="flex-1 rounded-full bg-cw-green py-2.5 text-sm font-extrabold text-cw-bg hover:bg-cw-green-press disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {phase === "signing"
+                  ? "Approve in wallet…"
+                  : phase === "sending"
+                    ? "Submitting…"
+                    : "Confirm & Sign"}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

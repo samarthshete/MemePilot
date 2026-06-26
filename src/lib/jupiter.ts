@@ -19,7 +19,9 @@ const TIMEOUT_MS = 6000;
 export type QuoteParams = {
   inputMint: string;
   outputMint: string;
-  amount: number; // smallest unit of inputMint
+  // smallest unit of inputMint. String-accepted so large token raw amounts
+  // (memecoins exceed Number.MAX_SAFE_INTEGER) keep full precision.
+  amount: number | string;
   slippageBps: number;
 };
 

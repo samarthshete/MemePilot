@@ -95,20 +95,45 @@ export async function relayAndConfirm(
   return { signature, status: "pending" };
 }
 
-/** Sum of UI token balance for `mint` owned by `owner` (for the position panel). */
+export type TokenBalance = {
+  /** UI (decimal-adjusted) amount — for display + USD valuation. */
+  uiAmount: number;
+  /** Raw integer amount (smallest units) as a string — for exact sell sizing. */
+  rawAmount: string;
+  decimals: number;
+};
+
+/** Summed token balance for `mint` owned by `owner` (position panel + sell sizing). */
 export async function getTokenBalance(
   owner: string,
   mint: string,
-): Promise<number> {
+): Promise<TokenBalance> {
   const res = await rpc<{
     value: {
-      account: { data: { parsed: { info: { tokenAmount: { uiAmount: number | null } } } } };
+      account: {
+        data: {
+          parsed: {
+            info: {
+              tokenAmount: {
+                amount: string;
+                decimals: number;
+                uiAmount: number | null;
+              };
+            };
+          };
+        };
+      };
     }[];
   }>("getTokenAccountsByOwner", [owner, { mint }, { encoding: "jsonParsed" }]);
-  let total = 0;
+
+  let raw = BigInt(0);
+  let ui = 0;
+  let decimals = 0;
   for (const acc of res.value) {
-    const ui = acc.account.data.parsed.info.tokenAmount.uiAmount;
-    if (typeof ui === "number") total += ui;
+    const ta = acc.account.data.parsed.info.tokenAmount;
+    raw += BigInt(ta.amount);
+    if (typeof ta.uiAmount === "number") ui += ta.uiAmount;
+    decimals = ta.decimals;
   }
-  return total;
+  return { uiAmount: ui, rawAmount: raw.toString(), decimals };
 }

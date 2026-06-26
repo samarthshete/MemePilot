@@ -2,8 +2,8 @@
 
 **Keep this current.** At the end of every stage, check off tasks, set the status, and add a session-log row.
 
-**Current focus:** Stage 6b 🟦 — BUY execution built (client-sign + server-relay); live on-chain test pending (Alchemy origin allowlist + browser signature)
-**Last updated:** 2026-06-25 (Stage 6b: /api/swap/build+send, Privy client signing, MAX_BUY_USD cap, /risk page, review modal)
+**Current focus:** Stage 6c 🟦 — SELL execution built (position-sized, client-sign + server-relay); live test pending (same blockers as 6b)
+**Last updated:** 2026-06-25 (Stage 6c: position-based sell sizing, token→SOL build/quote, server balance+cap validation; build-complete, not live-verified)
 **Live URL:** _not deployed_
 **Active branch:** `main`
 
@@ -55,6 +55,9 @@ Status key: ⬜ not started · 🟦 in progress · ✅ done · ⛔ blocked
     - ✅ verified mechanically: build returns a real signable tx; cap enforced server-side; server never signs/holds keys; no key/host in client bundle
     - ⏳ **to verify later:** fund a Privy wallet, run a ~$1 SOL→USDC buy, confirm the tx signature + position update — then flip this to ✅
     - ⚠️ pre-live blockers: Alchemy `SOLANA_RPC_URL` key has an origin allowlist that rejects server calls (fix in Alchemy dashboard); + needs a funded wallet + browser signature (not run by tooling)
+  - 🟦 **6c sell execution — BUILD-COMPLETE, NOT LIVE-VERIFIED (same as 6b)**: position-sized (server balance read → raw+decimals), %-presets 25/50/Max + exact input (BigInt, capped at balance), token→SOL quote, `/api/swap/build` validates `amount ≤ balance` + caps USD proceeds (`MAX_SELL_USD=$5`) server-side; reuses 6b sign/relay + side-aware ReviewModal; fee-ready/$0. ADR-023
+    - ✅ verified: sell build returns a real 539-byte tx; amount_capped + exceeds_balance typed; signing client-only; no secrets in client bundle; edge cases (0 balance/dust/Max/no-route/balance-fail) handled
+    - ⏳ to verify later: fund a wallet + lift the Alchemy origin allowlist, then run a tiny real sell and confirm signature + position decreases
 
 ---
 
@@ -83,3 +86,4 @@ Status key: ⬜ not started · 🟦 in progress · ✅ done · ⛔ blocked
 | 2026-06-25 | 5 | Holders + Live Trades tabs: /api/holders (300s) + /api/trades (45s) via free-tier /defi/v3/token/{holder,txs} + token_overview (% of supply, supply cached 1h); trades poll 45s only when tab active+visible; graceful gating fallback; read-only. ADR-020. | `main` |
 | 2026-06-25 | 6a | Jupiter QUOTE-ONLY: src/lib/jupiter.ts + POST /api/quote (keyless lite-api.jup.ag/swap/v1/quote; USD→SOL via BirdEye, decimals via token_overview; cached 12s + retry); right-panel preview (receive/impact/slippage/min-received/route) debounced. No swap/sign/send; quoting read-only. ADR-021. | `main` |
 | 2026-06-25 | 6b | BUY execution: jupiter.buildSwapTransaction + /api/swap/{build,send} + /api/position + solana.ts relay (raw JSON-RPC, server never signs); ReviewModal (Privy useSignTransaction, risk checkbox), MAX_BUY_USD=$5 server-enforced, /risk + /terms DRAFT legal, fee-ready/$0, SELL deferred. Build verified (real tx); on-chain test pending (Alchemy origin allowlist). +@solana-program/memo. ADR-022. | `main` |
+| 2026-06-25 | 6c | SELL execution: position-sized (server balance read raw+decimals), %-presets 25/50/Max + exact input (BigInt capped), token→SOL quote/build, server validates amount≤balance + MAX_SELL_USD=$5 proceeds cap; side-aware ReviewModal reuses 6b sign/relay; fee-ready/$0. Build verified (539-byte tx), edge cases typed; on-chain test pending (same blockers). ADR-023. | `main` |
