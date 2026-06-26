@@ -103,6 +103,16 @@ export type TokenBalance = {
   decimals: number;
 };
 
+/** Native SOL balance (NOT an SPL token account — uses getBalance). */
+export async function getSolBalance(owner: string): Promise<TokenBalance> {
+  const res = await rpc<{ value: number }>("getBalance", [
+    owner,
+    { commitment: "confirmed" },
+  ]);
+  const lamports = res.value ?? 0;
+  return { uiAmount: lamports / 1e9, rawAmount: String(lamports), decimals: 9 };
+}
+
 /** Summed token balance for `mint` owned by `owner` (position panel + sell sizing). */
 export async function getTokenBalance(
   owner: string,

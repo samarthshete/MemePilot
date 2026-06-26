@@ -13,6 +13,9 @@ export const BUY_PRESETS = [1, 3, 5];
 /** Sell sizing presets — percentages of the user's position (100 = Max). */
 export const SELL_PCT_PRESETS = [25, 50, 100];
 
+/** Below this native-SOL balance a BUY can't cover the swap + fees → gated with a hint. */
+export const MIN_SOL_TO_TRADE = 0.001;
+
 export const DEFAULT_SLIPPAGE_BPS = 50;
 
 export const SOL_MINT = "So11111111111111111111111111111111111111112";

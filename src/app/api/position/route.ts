@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getTickerPrices } from "@/lib/birdeye";
-import { getTokenBalance } from "@/lib/solana";
+import { getSolBalance, getTokenBalance } from "@/lib/solana";
+import { SOL_MINT } from "@/lib/trading-config";
 
 /**
  * "Your position" — token balance (server RPC) valued at the BirdEye price.
@@ -14,7 +15,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, error: "bad_request" }, { status: 400 });
   }
   try {
-    const balance = await getTokenBalance(owner, address);
+    // Native SOL uses getBalance; SPL tokens use getTokenAccountsByOwner.
+    const balance =
+      address === SOL_MINT
+        ? await getSolBalance(owner)
+        : await getTokenBalance(owner, address);
     let valueUsd: number | null = null;
     try {
       const price = (await getTickerPrices([address])).get(address);

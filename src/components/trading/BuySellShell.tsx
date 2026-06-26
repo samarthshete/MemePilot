@@ -8,7 +8,9 @@ import { publicEnv } from "@/lib/public-env";
 import {
   BUY_PRESETS,
   MAX_BUY_USD,
+  MIN_SOL_TO_TRADE,
   SELL_PCT_PRESETS,
+  SOL_MINT,
 } from "@/lib/trading-config";
 import { type Order, ReviewModal } from "./ReviewModal";
 
@@ -184,6 +186,8 @@ function TradePanelInner({
   const [sellQuote, setSellQuote] = useState<Quote<SellQuote>>({ status: "idle" });
 
   const [order, setOrder] = useState<Order | null>(null);
+  // Native SOL balance (null = unknown/not yet read) — gates BUY when ~empty.
+  const [solBalance, setSolBalance] = useState<number | null>(null);
 
   const refreshPosition = useCallback(async () => {
     if (!wallet) return;
@@ -231,6 +235,26 @@ function TradePanelInner({
       active = false;
     };
   }, [authenticated, wallet, address]);
+
+  // Native SOL balance (reuses /api/position; SOL_MINT → getBalance) for the buy gate.
+  useEffect(() => {
+    if (!authenticated || !wallet) return;
+    let active = true;
+    void (async () => {
+      try {
+        const res = await fetch(
+          `/api/position?address=${encodeURIComponent(SOL_MINT)}&owner=${encodeURIComponent(wallet.address)}`,
+        );
+        const data = (await res.json()) as { ok: true; qty: number } | { ok: false };
+        if (active && data.ok) setSolBalance(data.qty);
+      } catch {
+        /* leave unknown */
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [authenticated, wallet]);
 
   const sellRawAmount = computeSellRaw(rawBalance, decimals, sellPct, sellExact);
 
@@ -295,6 +319,11 @@ function TradePanelInner({
   const hasPosition = (qty ?? 0) > 0;
   const sellTokens = decimals ? Number(sellRawAmount) / 10 ** decimals : 0;
 
+  // Known-empty wallet states (only when the balance was actually read). Gate the
+  // execute step so we never open the Privy modal into a "will likely fail" error.
+  const buyEmpty = solBalance != null && solBalance < MIN_SOL_TO_TRADE;
+  const sellEmpty = authenticated && qty === 0;
+
   let action: React.ReactNode;
   if (!ready) {
     action = disabledButton("…");
@@ -309,18 +338,22 @@ function TradePanelInner({
       </button>
     );
   } else if (side === "buy") {
-    action = overCap ? (
-      disabledButton(`Max $${MAX_BUY_USD} this stage`)
-    ) : (
-      <button
-        type="button"
-        disabled={!(buyValid && wallet && buyQuote.status === "ready")}
-        onClick={() => setOrder({ side: "buy", amountUsd: buyUsd })}
-        className={`${ACTION_BASE} bg-cw-green text-cw-bg hover:bg-cw-green-press disabled:cursor-not-allowed disabled:opacity-50`}
-      >
-        Review buy {symbol}
-      </button>
-    );
+    if (overCap) {
+      action = disabledButton(`Max $${MAX_BUY_USD} this stage`);
+    } else if (buyEmpty) {
+      action = disabledButton("Add SOL to trade");
+    } else {
+      action = (
+        <button
+          type="button"
+          disabled={!(buyValid && wallet && buyQuote.status === "ready")}
+          onClick={() => setOrder({ side: "buy", amountUsd: buyUsd })}
+          className={`${ACTION_BASE} bg-cw-green text-cw-bg hover:bg-cw-green-press disabled:cursor-not-allowed disabled:opacity-50`}
+        >
+          Review buy {symbol}
+        </button>
+      );
+    }
   } else if (!hasPosition) {
     action = disabledButton(`No ${symbol} to sell`);
   } else {
@@ -365,6 +398,13 @@ function TradePanelInner({
           sellTokens={sellTokens}
           quote={sellQuote}
         />
+      )}
+
+      {wallet && side === "buy" && buyEmpty && (
+        <WalletHint address={wallet.address} message="Add SOL to your wallet to trade" />
+      )}
+      {wallet && side === "sell" && sellEmpty && (
+        <WalletHint address={wallet.address} message={`No ${symbol} to sell yet`} />
       )}
 
       <div className="mt-4">{action}</div>
@@ -517,6 +557,44 @@ function SellControls({
       </div>
       <SellPreview state={quote} />
     </>
+  );
+}
+
+function WalletHint({
+  address,
+  message,
+}: {
+  address: string;
+  message: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  const short = `${address.slice(0, 4)}…${address.slice(-4)}`;
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard blocked */
+    }
+  };
+  return (
+    <div className="mt-4 rounded-xl border border-cw-green/25 bg-cw-green/5 p-3 text-sm">
+      <p className="font-semibold text-cw-text">{message}</p>
+      <p className="mt-1 text-xs text-cw-text-muted">Send funds to your wallet:</p>
+      <button
+        type="button"
+        onClick={copy}
+        title={`Copy ${address}`}
+        aria-label={`Copy wallet address ${address}`}
+        className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg border border-white/12 bg-cw-bg px-2.5 py-1.5 font-mono text-xs text-cw-text-muted transition-colors hover:border-cw-green hover:text-cw-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cw-green"
+      >
+        {short}
+        <span className={copied ? "text-cw-green" : ""}>
+          {copied ? "copied ✓" : "copy"}
+        </span>
+      </button>
+    </div>
   );
 }
 
