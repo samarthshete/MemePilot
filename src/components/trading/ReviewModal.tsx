@@ -348,7 +348,7 @@ export function ReviewModal({
                   checked={highRiskAccepted}
                   disabled={inFlight}
                   onChange={(e) => setHighRiskAccepted(e.target.checked)}
-                  className="mt-0.5 accent-cw-orange"
+                  className="mt-0.5 accent-cw-red"
                 />
                 <span>I understand this token is high-risk and want to proceed.</span>
               </label>
