@@ -13,6 +13,7 @@ import {
   SELL_PCT_PRESETS,
   SOL_MINT,
 } from "@/lib/trading-config";
+import { DepositModal } from "@/components/ui/DepositModal";
 import { type Order, ReviewModal } from "./ReviewModal";
 import { SafetyBadge } from "./SafetyBadge";
 
@@ -612,33 +613,23 @@ function WalletHint({
   address: string;
   message: string;
 }) {
-  const [copied, setCopied] = useState(false);
-  const short = `${address.slice(0, 4)}…${address.slice(-4)}`;
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(address);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      /* clipboard blocked */
-    }
-  };
+  const [depositOpen, setDepositOpen] = useState(false);
   return (
     <div className="mt-4 rounded-xl border border-cw-green/25 bg-cw-green/5 p-3 text-sm">
       <p className="font-semibold text-cw-text">{message}</p>
-      <p className="mt-1 text-xs text-cw-text-muted">Send funds to your wallet:</p>
+      <p className="mt-1 text-xs text-cw-text-muted">
+        Deposit SOL to your wallet to get started — it’s free and arrives in seconds.
+      </p>
       <button
         type="button"
-        onClick={copy}
-        title={`Copy ${address}`}
-        aria-label={`Copy wallet address ${address}`}
-        className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg border border-white/12 bg-cw-bg px-2.5 py-1.5 font-mono text-xs text-cw-text-muted transition-colors hover:border-cw-green hover:text-cw-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cw-green"
+        onClick={() => setDepositOpen(true)}
+        className="mt-2 w-full rounded-full bg-cw-green py-2 text-sm font-extrabold text-cw-bg transition-colors hover:bg-cw-green-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cw-green focus-visible:ring-offset-2 focus-visible:ring-offset-cw-bg"
       >
-        {short}
-        <span className={copied ? "text-cw-green" : ""}>
-          {copied ? "copied ✓" : "copy"}
-        </span>
+        Receive / Deposit
       </button>
+      {depositOpen && (
+        <DepositModal address={address} onClose={() => setDepositOpen(false)} />
+      )}
     </div>
   );
 }
