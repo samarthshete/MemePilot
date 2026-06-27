@@ -135,6 +135,14 @@ export async function getMintAuthorities(mint: string): Promise<{
   }
 }
 
+/** Latest blockhash for building a transaction (server RPC). */
+export async function getLatestBlockhash(): Promise<string> {
+  const res = await rpc<{ value: { blockhash: string } }>("getLatestBlockhash", [
+    { commitment: "confirmed" },
+  ]);
+  return res.value.blockhash;
+}
+
 /** Native SOL balance (NOT an SPL token account — uses getBalance). */
 export async function getSolBalance(owner: string): Promise<TokenBalance> {
   const res = await rpc<{ value: number }>("getBalance", [
@@ -143,6 +151,52 @@ export async function getSolBalance(owner: string): Promise<TokenBalance> {
   ]);
   const lamports = res.value ?? 0;
   return { uiAmount: lamports / 1e9, rawAmount: String(lamports), decimals: 9 };
+}
+
+const TOKEN_PROGRAM = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+
+export type TokenHolding = {
+  mint: string;
+  uiAmount: number;
+  rawAmount: string;
+  decimals: number;
+};
+
+type ParsedTokenAccount = {
+  account: {
+    data: {
+      parsed: { info: { mint: string; tokenAmount: { amount: string; decimals: number; uiAmount: number | null } } };
+    };
+  };
+};
+
+/**
+ * ALL non-zero SPL holdings for `owner` (classic Token + Token-2022 programs),
+ * for the portfolio holdings list. Read-only; returns [] on RPC failure.
+ */
+export async function getAllTokenBalances(owner: string): Promise<TokenHolding[]> {
+  const programs = [TOKEN_PROGRAM, TOKEN_2022_PROGRAM];
+  const out: TokenHolding[] = [];
+  for (const programId of programs) {
+    try {
+      const res = await rpc<{ value: ParsedTokenAccount[] }>("getTokenAccountsByOwner", [
+        owner,
+        { programId },
+        { encoding: "jsonParsed" },
+      ]);
+      for (const acc of res.value ?? []) {
+        const info = acc.account.data.parsed.info;
+        const ta = info.tokenAmount;
+        const ui = ta.uiAmount ?? 0;
+        if (ui > 0) {
+          out.push({ mint: info.mint, uiAmount: ui, rawAmount: ta.amount, decimals: ta.decimals });
+        }
+      }
+    } catch (err) {
+      console.warn(`[holdings] ${programId} read failed for ${owner}: ${(err as Error).message}`);
+    }
+  }
+  return out;
 }
 
 /** Summed token balance for `mint` owned by `owner` (position panel + sell sizing). */
