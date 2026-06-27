@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { score, type ScoreInput } from "./score";
+import { score, type RugReport, type ScoreInput } from "./score";
+import type { RiskSignal } from "./types";
+
+function rugSignal(over: Partial<RiskSignal> = {}): RiskSignal {
+  return { id: "r", label: "Risk", severity: "warn", detail: "", triggered: true, ...over };
+}
 
 /** A fully-known, benign token: every field present, nothing risky. */
 function clean(overrides: Partial<ScoreInput> = {}): ScoreInput {
@@ -53,5 +58,54 @@ describe("score()", () => {
   it("marks the report degraded when a signal input is unknown (null)", () => {
     const r = score(clean({ sellRouteExists: null }));
     expect(r.degraded).toBe(true);
+  });
+
+  it("uses the heuristic source when no RugCheck report is provided", () => {
+    expect(score(clean()).source).toBe("heuristic");
+  });
+});
+
+describe("score() with RugCheck (primary model)", () => {
+  function rug(scoreNormalised: number, signals: RiskSignal[] = []): RugReport {
+    return { scoreNormalised, signals };
+  }
+
+  it("rates a clean RugCheck report LOW and reports its normalised score", () => {
+    const r = score(clean(), rug(5));
+    expect(r.level).toBe("LOW");
+    expect(r.score).toBe(5);
+    expect(r.source).toBe("rugcheck");
+    expect(r.degraded).toBe(false);
+  });
+
+  it("raises a low-score token to MEDIUM on a warn-level risk (worst-wins)", () => {
+    const r = score(clean(), rug(21, [rugSignal({ id: "thin_liquidity", label: "Low Liquidity", severity: "warn" })]));
+    expect(r.level).toBe("MEDIUM");
+    expect(r.signals.some((s) => s.id === "thin_liquidity")).toBe(true);
+  });
+
+  it("rates a danger-level RugCheck risk HIGH", () => {
+    const r = score(clean(), rug(25, [rugSignal({ severity: "danger" })]));
+    expect(r.level).toBe("HIGH");
+  });
+
+  it("rates a high normalised score CRITICAL via the band floor", () => {
+    expect(score(clean(), rug(85)).level).toBe("CRITICAL");
+  });
+
+  it("escalates to CRITICAL when our honeypot probe finds no sell route", () => {
+    // RugCheck score is low, but our corroborating probe (buy ok, sell missing)
+    // contributes a block signal → worst-wins ⇒ CRITICAL.
+    const r = score(clean({ buyRouteExists: true, sellRouteExists: false }), rug(10));
+    expect(r.level).toBe("CRITICAL");
+    expect(r.signals.some((s) => s.id === "honeypot_no_sell_route")).toBe(true);
+  });
+
+  it("dedupes a RugCheck risk against the same heuristic id", () => {
+    const r = score(
+      clean({ buyRouteExists: true, sellRouteExists: false }),
+      rug(40, [rugSignal({ id: "honeypot_no_sell_route", label: "Honeypot", severity: "block" })]),
+    );
+    expect(r.signals.filter((s) => s.id === "honeypot_no_sell_route")).toHaveLength(1);
   });
 });
