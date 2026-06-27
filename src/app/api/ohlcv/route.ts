@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOhlcv, type OhlcvRange } from "@/lib/birdeye";
 import { getOrSet } from "@/lib/cache";
+import { edgeCache } from "@/lib/cache-headers";
 
 const RANGES: readonly OhlcvRange[] = ["1D", "1W", "1M"];
 
@@ -10,9 +11,9 @@ function parseRange(value: string | null): OhlcvRange {
 
 /**
  * Server proxy for chart data (CLAUDE.md hard rule 2). Cached per (address,range)
- * for 180s → one upstream BirdEye call per window. Always 200 with `points`;
- * on failure returns `{ points: [], unavailable: true }` so the chart shows a
- * clean empty state and the page never crashes.
+ * for 300s → one upstream BirdEye call per window; edge cache (300s + SWR) serves
+ * concurrent visitors. Always 200 with `points`; on failure returns
+ * `{ points: [], unavailable: true }` so the chart shows a clean empty state.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -24,14 +25,11 @@ export async function GET(request: Request) {
   }
 
   try {
-    const points = await getOrSet(`ohlcv:${address}:${range}`, 180_000, () => {
+    const points = await getOrSet(`ohlcv:${address}:${range}`, 300_000, () => {
       console.info(`[ohlcv] cache miss → BirdEye ${address} ${range}`);
       return getOhlcv(address, range);
     });
-    return NextResponse.json(
-      { points, range },
-      { headers: { "Cache-Control": "public, max-age=0, s-maxage=180" } },
-    );
+    return NextResponse.json({ points, range }, { headers: edgeCache(300) });
   } catch (err) {
     console.warn(`[ohlcv] failed for ${address} ${range}: ${(err as Error).message}`);
     return NextResponse.json({ points: [], unavailable: true });

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getTopHolders } from "@/lib/birdeye";
 import { getOrSet } from "@/lib/cache";
+import { edgeCache } from "@/lib/cache-headers";
 
 /**
  * Top holders proxy. Cached 300s per address (slow-changing) → one upstream
@@ -17,10 +18,7 @@ export async function GET(request: Request) {
       console.info(`[holders] cache miss → BirdEye ${address}`);
       return getTopHolders(address);
     });
-    return NextResponse.json(
-      { holders },
-      { headers: { "Cache-Control": "public, max-age=0, s-maxage=300" } },
-    );
+    return NextResponse.json({ holders }, { headers: edgeCache(300) });
   } catch (err) {
     console.warn(`[holders] failed for ${address}: ${(err as Error).message}`);
     return NextResponse.json({ holders: [], unavailable: true });
