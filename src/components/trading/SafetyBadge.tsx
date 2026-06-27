@@ -41,9 +41,29 @@ export function SafetyBadge({
     );
   }
 
+  // Curated bluechips get a distinct "Verified" treatment so it's clear WHY
+  // they're safe (allowlisted), not a generic "Low risk".
+  if (report.verified) {
+    return (
+      <div className="mt-4 rounded-xl border border-cw-green/30 bg-cw-green/5 p-3">
+        <span className="flex items-center gap-2 text-sm font-bold text-cw-green">
+          <span className="h-2 w-2 rounded-full bg-cw-green" aria-hidden />
+          Verified ✓
+        </span>
+        <p className="mt-1.5 text-xs text-cw-text-muted">
+          Curated bluechip — on the allowlist of well-known tokens.
+        </p>
+      </div>
+    );
+  }
+
   const level = effectiveLevel(report);
   const s = LEVEL_STYLE[level];
   const triggered = report.signals;
+  const provenance =
+    report.source === "rugcheck"
+      ? "via RugCheck"
+      : "Heuristic check — RugCheck unavailable";
 
   return (
     <div className={`mt-4 rounded-xl border ${s.box} p-3`}>
@@ -52,16 +72,14 @@ export function SafetyBadge({
           <span className={`h-2 w-2 rounded-full ${s.dot}`} aria-hidden />
           {s.label}
         </span>
-        {report.verified ? (
-          <span className="rounded-full bg-cw-green/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-cw-green">
-            verified
-          </span>
-        ) : (
-          <span className="font-mono text-[11px] text-cw-text-muted">
-            score {report.score}
-          </span>
-        )}
+        <span className="font-mono text-[11px] text-cw-text-muted">
+          score {report.score}/100
+        </span>
       </div>
+
+      <p className="mt-1 font-mono text-[10px] uppercase tracking-wide text-cw-text-muted">
+        {provenance}
+      </p>
 
       {report.degraded && (
         <p className="mt-1.5 text-xs text-cw-text-muted">
