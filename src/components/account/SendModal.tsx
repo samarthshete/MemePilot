@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePrivy } from "@privy-io/react-auth";
 import type { ConnectedStandardSolanaWallet } from "@privy-io/react-auth/solana";
 import { useSignTransaction } from "@privy-io/react-auth/solana";
 
@@ -51,6 +52,7 @@ export function SendModal({
   onSuccess: () => void;
 }) {
   const { signTransaction } = useSignTransaction();
+  const { getAccessToken } = usePrivy();
   const dialogRef = useRef<HTMLDivElement>(null);
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
@@ -130,9 +132,14 @@ export function SendModal({
         chain: "solana:mainnet",
       });
       setPhase("sending");
+      // /api/swap/send now requires a Privy token (the user is authenticated here).
+      const authToken = await getAccessToken().catch(() => null);
       const sent = await fetch("/api/swap/send", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          ...(authToken ? { authorization: `Bearer ${authToken}` } : {}),
+        },
         body: JSON.stringify({ signedTxBase64: bytesToBase64(signedTransaction) }),
       });
       const res = (await sent.json()) as
