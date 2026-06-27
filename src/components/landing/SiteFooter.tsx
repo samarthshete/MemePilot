@@ -23,8 +23,8 @@ export function SiteFooter() {
             </span>
           </div>
           <p className="mt-4 text-sm font-medium leading-relaxed text-cw-text-muted">
-            The social-first Solana memecoin wallet. Find the next 100x, follow
-            the smartest traders, and own your crypto.
+            The non-custodial Solana memecoin wallet. Discover trending tokens,
+            trade in seconds, and own your crypto.
           </p>
           <div className="mt-4 flex gap-2.5">
             <a
@@ -71,12 +71,12 @@ export function SiteFooter() {
             <Link href={`/t/${DEFAULT_TRADE_MINT}`} className={linkClass}>
               Trade
             </Link>
-            <a href="#" className={linkClass}>
-              KOL traders
-            </a>
-            <a href="#" className={linkClass}>
-              Launch
-            </a>
+            <Link href="/account" className={linkClass}>
+              Portfolio
+            </Link>
+            <Link href="/receive" className={linkClass}>
+              Receive
+            </Link>
           </div>
           <div className="flex flex-col gap-3">
             <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-cw-text-muted">

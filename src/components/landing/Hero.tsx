@@ -34,8 +34,9 @@ export function Hero() {
           </h1>
 
           <p className="mt-5 max-w-[480px] text-[clamp(1rem,1.5vw,1.1875rem)] font-medium leading-relaxed text-cw-text-muted">
-            Get ChadWallet today. Never miss the next breakout! Discover, follow
-            the smartest traders, and ape in seconds — no seed phrase.
+            Get ChadWallet today. Never miss the next breakout — discover
+            trending tokens, trade in seconds, and track your bag. Non-custodial,
+            no seed phrase.
           </p>
 
           {/* Primary web-trading entry (the app-download block stays below). */}

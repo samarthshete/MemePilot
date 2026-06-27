@@ -22,7 +22,7 @@ const spaceMono = Space_Mono({
 
 const title = "ChadWallet — find the next 100x memecoins";
 const description =
-  "Get ChadWallet: the social-first, non-custodial Solana memecoin wallet. Discover trending coins, follow the smartest traders, and ape in seconds — no seed phrase.";
+  "ChadWallet: a non-custodial Solana memecoin wallet. Discover trending tokens, trade in seconds, and track your portfolio — you hold the keys, no seed phrase.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

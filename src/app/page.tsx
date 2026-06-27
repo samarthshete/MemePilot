@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import kolScreen from "../../public/brand/app-store/kol.png";
-import launchScreen from "../../public/brand/app-store/launch.png";
+import depositScreen from "../../public/brand/app-store/deposit.png";
+import discoverScreen from "../../public/brand/app-store/discover.png";
 import portfolioScreen from "../../public/brand/app-store/portfolio.png";
 import tokenScreen from "../../public/brand/app-store/token.png";
 import { FeatureRow } from "@/components/landing/FeatureRow";
@@ -66,22 +66,22 @@ export default function Home() {
           />
           <FeatureRow
             index="02"
-            titleLead="Follow"
-            titleAccent="KOL traders"
-            label="KOL feed"
-            screenshot={kolScreen}
-            screenshotAlt="ChadWallet KOL feed showing top traders' live buys and sells"
+            titleLead="Discover what's"
+            titleAccent="trending now"
+            label="Discover"
+            screenshot={discoverScreen}
+            screenshotAlt="ChadWallet discover screen with trending Solana tokens"
             reversed
-            body="See exactly what the smartest traders ape into — the second they do it. Track wins, win-rates and live PnL. Copy the winners, dodge the rugs."
+            body="Live trending tokens scroll across the top and bottom of every page, with real holders and live trades on each token. Spot momentum early — then trade it in seconds."
           />
           <FeatureRow
             index="03"
-            titleLead="Launch memecoins"
-            titleAccent="in one tap"
-            label="Launch"
-            screenshot={launchScreen}
-            screenshotAlt="ChadWallet one-tap memecoin launch form"
-            body="Turn any meme, viral tweet, or shower thought into a coin. Name it, ticker it, launch it — live on Solana in seconds."
+            titleLead="Non-custodial"
+            titleAccent="by design"
+            label="Security"
+            screenshot={depositScreen}
+            screenshotAlt="ChadWallet wallet screen — your keys, your coins"
+            body="Sign in with Apple, Google or email and a Solana wallet is created just for you — but only you hold the keys. You approve every transaction; we never take custody of your funds."
           />
           <FeatureRow
             index="04"
@@ -91,7 +91,7 @@ export default function Home() {
             screenshot={portfolioScreen}
             screenshotAlt="ChadWallet portfolio screen with holdings and live PnL"
             reversed
-            body="Your whole bag, live PnL, rewards, deposits and instant withdrawals — all on one screen. Non-custodial, always yours."
+            body="Your whole bag and live PnL on one screen — holdings, positions, deposits and withdrawals, all in one place. Non-custodial, always yours."
           />
         </section>
 
