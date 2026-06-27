@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePrivy } from "@privy-io/react-auth";
 import { useWallets } from "@privy-io/react-auth/solana";
-import { DepositModal } from "@/components/ui/DepositModal";
 import { publicEnv } from "@/lib/public-env";
 
 const PILL =
@@ -36,7 +35,6 @@ function AuthButtonInner() {
   const { wallets } = useWallets();
   const [menuOpen, setMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [depositOpen, setDepositOpen] = useState(false);
 
   // Pre-hydration / Privy still initializing → neutral placeholder (no flicker).
   if (!ready) {
@@ -138,17 +136,14 @@ function AuthButtonInner() {
             >
               Account
             </Link>
-            <button
-              type="button"
+            <Link
+              href="/receive"
               role="menuitem"
-              onClick={() => {
-                setMenuOpen(false);
-                setDepositOpen(true);
-              }}
+              onClick={() => setMenuOpen(false)}
               className="block w-full rounded-lg px-3 py-2 text-left text-sm font-semibold text-cw-text transition-colors hover:bg-white/5"
             >
               Receive / Deposit
-            </button>
+            </Link>
             <button
               type="button"
               role="menuitem"
@@ -170,10 +165,6 @@ function AuthButtonInner() {
             </button>
           </div>
         </>
-      )}
-
-      {depositOpen && (
-        <DepositModal address={address} onClose={() => setDepositOpen(false)} />
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { usePrivy } from "@privy-io/react-auth";
 import { useWallets } from "@privy-io/react-auth/solana";
 import { formatCompact, formatUsdPrice } from "@/lib/format";
@@ -13,7 +14,6 @@ import {
   SELL_PCT_PRESETS,
   SOL_MINT,
 } from "@/lib/trading-config";
-import { DepositModal } from "@/components/ui/DepositModal";
 import { type Order, ReviewModal } from "./ReviewModal";
 import { SafetyBadge } from "./SafetyBadge";
 
@@ -435,10 +435,10 @@ function TradePanelInner({
       )}
 
       {wallet && side === "buy" && buyEmpty && (
-        <WalletHint address={wallet.address} message="Add SOL to your wallet to trade" />
+        <WalletHint message="Add SOL to your wallet to trade" />
       )}
       {wallet && side === "sell" && sellEmpty && (
-        <WalletHint address={wallet.address} message={`No ${symbol} to sell yet`} />
+        <WalletHint message={`No ${symbol} to sell yet`} />
       )}
 
       <SafetyBadge report={safety} loading={safetyLoading} />
@@ -606,30 +606,19 @@ function SellControls({
   );
 }
 
-function WalletHint({
-  address,
-  message,
-}: {
-  address: string;
-  message: string;
-}) {
-  const [depositOpen, setDepositOpen] = useState(false);
+function WalletHint({ message }: { message: string }) {
   return (
     <div className="mt-4 rounded-xl border border-cw-green/25 bg-cw-green/5 p-3 text-sm">
       <p className="font-semibold text-cw-text">{message}</p>
       <p className="mt-1 text-xs text-cw-text-muted">
         Deposit SOL to your wallet to get started — it’s free and arrives in seconds.
       </p>
-      <button
-        type="button"
-        onClick={() => setDepositOpen(true)}
-        className="mt-2 w-full rounded-full bg-cw-green py-2 text-sm font-extrabold text-cw-bg transition-colors hover:bg-cw-green-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cw-green focus-visible:ring-offset-2 focus-visible:ring-offset-cw-bg"
+      <Link
+        href="/receive"
+        className="mt-2 block w-full rounded-full bg-cw-green py-2 text-center text-sm font-extrabold text-cw-bg transition-colors hover:bg-cw-green-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cw-green focus-visible:ring-offset-2 focus-visible:ring-offset-cw-bg"
       >
         Receive / Deposit
-      </button>
-      {depositOpen && (
-        <DepositModal address={address} onClose={() => setDepositOpen(false)} />
-      )}
+      </Link>
     </div>
   );
 }
