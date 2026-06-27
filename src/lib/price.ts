@@ -62,9 +62,28 @@ const jupSchema = z.record(
       usdPrice: z.number(),
       priceChange24h: z.number().nullish(),
       liquidity: z.number().nullish(),
+      decimals: z.number().nullish(),
     })
     .nullable(),
 );
+
+/**
+ * Token decimals from Jupiter Price v3 (keyless, free) — a fallback for when
+ * BirdEye's token_overview is rate-limited (429), so a BUY quote can still size
+ * the output. Cached 1h. Returns null if Jupiter can't resolve the mint.
+ */
+export function getJupiterDecimals(mint: string): Promise<number | null> {
+  return getOrSet(`decimals:jup:${mint}`, 3_600_000, async () => {
+    try {
+      const json = jupSchema.parse(
+        await fetchJson(`${JUP_PRICE}?ids=${encodeURIComponent(mint)}`),
+      );
+      return json[mint]?.decimals ?? null;
+    } catch {
+      return null;
+    }
+  });
+}
 
 async function fromJupiter(
   address: string,

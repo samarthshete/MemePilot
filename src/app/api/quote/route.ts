@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getTickerPrices, getTokenDecimals } from "@/lib/birdeye";
+import { getTokenDecimals } from "@/lib/birdeye";
 import { getOrSet } from "@/lib/cache";
 import { getQuote } from "@/lib/jupiter";
+import { getJupiterDecimals, getPrice } from "@/lib/price";
 import { SOL_DECIMALS, SOL_MINT } from "@/lib/trading-config";
 
 /**
@@ -31,14 +32,11 @@ const bodySchema = z.discriminatedUnion("side", [
 
 type HttpError = { status?: number };
 
+// Multi-source SOL price (BirdEye → Jupiter → DexScreener, cached): the SOL price
+// is the hottest key and BirdEye 429s it first — falling back keeps quotes (and
+// the default landing page) working instead of failing with "Quote unavailable".
 function getSolPrice(): Promise<number | null> {
-  return getOrSet("price:SOL", 30_000, async () => {
-    try {
-      return (await getTickerPrices([SOL_MINT])).get(SOL_MINT)?.priceUsd ?? null;
-    } catch {
-      return null;
-    }
-  });
+  return getPrice(SOL_MINT).then((p) => p.priceUsd).catch(() => null);
 }
 
 function routeLabelsOf(routePlan: { swapInfo?: { label?: string } }[] | undefined) {
@@ -64,7 +62,9 @@ export async function POST(request: Request) {
         async () => {
           const solPrice = await getSolPrice();
           if (!solPrice) throw new Error("sol price unavailable");
-          const decimals = await getTokenDecimals(address);
+          // BirdEye token_overview first; fall back to Jupiter v3 decimals on 429.
+          const decimals =
+            (await getTokenDecimals(address)) ?? (await getJupiterDecimals(address));
           if (decimals == null) throw new Error("token decimals unavailable");
           const lamports = Math.round((body.amountUsd / solPrice) * 10 ** SOL_DECIMALS);
           console.info(`[quote] cache miss → Jupiter buy ${address} $${body.amountUsd} ${slippageBps}bps`);

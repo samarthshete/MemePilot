@@ -284,9 +284,15 @@ function TradePanelInner({
 
   const sellRawAmount = computeSellRaw(rawBalance, decimals, sellPct, sellExact);
 
+  // Base-asset page: BUY quotes SOL→token and SELL quotes token→SOL, so when the
+  // page token IS SOL both sides are SOL→SOL (input==output) — a no-op Jupiter
+  // can't quote. We skip quoting entirely and show a base-asset note instead of a
+  // misleading "Quote unavailable". (Default landing is JUP, so this is defensive.)
+  const isBaseAsset = address === SOL_MINT;
+
   // Buy quote (debounced) — public preview, no auth needed.
   useEffect(() => {
-    if (side !== "buy") return;
+    if (side !== "buy" || isBaseAsset) return;
     const timer = setTimeout(() => {
       const usd = Number.parseFloat(buyAmount);
       if (!Number.isFinite(usd) || usd <= 0) {
@@ -310,11 +316,11 @@ function TradePanelInner({
       })();
     }, 400);
     return () => clearTimeout(timer);
-  }, [side, address, buyAmount, slippageBps]);
+  }, [side, address, buyAmount, slippageBps, isBaseAsset]);
 
   // Sell quote (debounced) — needs a sized raw amount.
   useEffect(() => {
-    if (side !== "sell") return;
+    if (side !== "sell" || isBaseAsset) return;
     const timer = setTimeout(() => {
       if (sellRawAmount === "0") {
         setSellQuote({ status: "idle" });
@@ -337,7 +343,7 @@ function TradePanelInner({
       })();
     }, 400);
     return () => clearTimeout(timer);
-  }, [side, address, sellRawAmount, slippageBps]);
+  }, [side, address, sellRawAmount, slippageBps, isBaseAsset]);
 
   const buyUsd = Number.parseFloat(buyAmount);
   const buyValid = Number.isFinite(buyUsd) && buyUsd > 0;
@@ -363,6 +369,8 @@ function TradePanelInner({
         Sign in to {side} {symbol}
       </button>
     );
+  } else if (isBaseAsset) {
+    action = disabledButton(`${symbol} is your base asset`);
   } else if (side === "buy") {
     if (overCap) {
       action = disabledButton(`Max $${MAX_BUY_USD} this stage`);
@@ -434,10 +442,18 @@ function TradePanelInner({
         />
       )}
 
-      {wallet && side === "buy" && buyEmpty && (
+      {isBaseAsset && (
+        <div className="mt-4 rounded-xl border border-white/8 bg-cw-bg/60 p-3 text-sm text-cw-text-muted">
+          <span className="font-semibold text-cw-text">{symbol} is your base trading asset.</span>{" "}
+          Open a token’s page to buy it with your {symbol}, or to sell a token back
+          to {symbol}.
+        </div>
+      )}
+
+      {!isBaseAsset && wallet && side === "buy" && buyEmpty && (
         <WalletHint message="Add SOL to your wallet to trade" />
       )}
-      {wallet && side === "sell" && sellEmpty && (
+      {!isBaseAsset && wallet && side === "sell" && sellEmpty && (
         <WalletHint message={`No ${symbol} to sell yet`} />
       )}
 
