@@ -6,9 +6,9 @@ import { TickerSkeleton } from "@/components/landing/TickerSkeleton";
 import { BuySellShell } from "@/components/trading/BuySellShell";
 import { ContractChip } from "@/components/trading/ContractChip";
 import { PriceChart } from "@/components/trading/PriceChart";
+import { TokenPrice } from "@/components/trading/TokenPrice";
 import { TokenTabs } from "@/components/trading/TokenTabs";
 import { TrendingList } from "@/components/trading/TrendingList";
-import { formatPercent, formatUsdPrice } from "@/lib/format";
 import {
   CURATED_TOKENS,
   getTokenSummary,
@@ -35,9 +35,6 @@ export default async function TradingPage({ params }: Params) {
     getTrendingTokens(),
     getTokenSummary(address),
   ]);
-
-  const hasPrice = summary.priceUsd !== null && summary.change24h !== null;
-  const up = (summary.change24h ?? 0) >= 0;
 
   return (
     <>
@@ -74,22 +71,14 @@ export default async function TradingPage({ params }: Params) {
               </div>
             </div>
 
-            <div className="text-right">
-              <div className="font-mono text-3xl font-bold text-cw-text">
-                {hasPrice ? formatUsdPrice(summary.priceUsd as number) : "—"}
-              </div>
-              {hasPrice ? (
-                <div
-                  className={`font-mono text-sm font-bold ${up ? "text-cw-green" : "text-cw-red"}`}
-                >
-                  {up ? "▲" : "▼"} {formatPercent(summary.change24h as number)} (24h)
-                </div>
-              ) : (
-                <div className="font-mono text-sm text-cw-text-muted">
-                  Price unavailable
-                </div>
-              )}
-            </div>
+            <TokenPrice
+              address={address}
+              initial={{
+                priceUsd: summary.priceUsd,
+                change24h: summary.change24h,
+                source: summary.priceSource,
+              }}
+            />
           </div>
 
           <div className="mt-5 rounded-2xl border border-white/8 bg-cw-surface/40 p-4">

@@ -1,5 +1,6 @@
 import { getTickerPrices } from "@/lib/birdeye";
 import { getOrSet } from "@/lib/cache";
+import { getPrice, type PriceSource } from "@/lib/price";
 import { PLACEHOLDER_TOKENS, type Token } from "@/components/landing/ticker-data";
 
 /**
@@ -82,12 +83,15 @@ export type TokenSummary = {
   known: boolean;
   priceUsd: number | null;
   change24h: number | null;
+  /** Which free source the price came from (or "none" if all failed). */
+  priceSource: PriceSource;
 };
 
 /**
  * Header summary for the trading page: symbol/tag from the curated config (or a
- * truncated address for unknown mints) + live price/24h change from /defi/price.
- * Cached 60s per address; never throws (price is null if BirdEye fails).
+ * truncated address for unknown mints) + live price/24h change via the
+ * multi-source resolver (BirdEye → Jupiter → DexScreener). Cached 60s per
+ * address; never throws (price is null only if ALL sources fail).
  */
 export function getTokenSummary(address: string): Promise<TokenSummary> {
   return getOrSet(`token:summary:${address}`, 60_000, () =>
@@ -97,22 +101,14 @@ export function getTokenSummary(address: string): Promise<TokenSummary> {
 
 async function fetchTokenSummary(address: string): Promise<TokenSummary> {
   const curated = CURATED_TOKENS.find((t) => t.address === address);
-  const summary: TokenSummary = {
+  const price = await getPrice(address);
+  return {
     address,
     symbol: curated?.symbol ?? truncateMint(address),
     tag: curated?.tag ?? address.slice(0, 3).toUpperCase(),
     known: Boolean(curated),
-    priceUsd: null,
-    change24h: null,
+    priceUsd: price.priceUsd,
+    change24h: price.change24h,
+    priceSource: price.source,
   };
-  try {
-    const point = (await getTickerPrices([address])).get(address);
-    if (point) {
-      summary.priceUsd = point.priceUsd;
-      summary.change24h = point.change24h;
-    }
-  } catch (err) {
-    console.warn(`[token] price fetch failed for ${address}: ${(err as Error).message}`);
-  }
-  return summary;
 }
