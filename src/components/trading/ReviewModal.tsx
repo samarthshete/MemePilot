@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePrivy } from "@privy-io/react-auth";
 import type { ConnectedStandardSolanaWallet } from "@privy-io/react-auth/solana";
 import { useSignTransaction } from "@privy-io/react-auth/solana";
 import { formatCompact, formatUsdPrice } from "@/lib/format";
@@ -88,6 +89,7 @@ export function ReviewModal({
   onSuccess: () => void;
 }) {
   const { signTransaction } = useSignTransaction();
+  const { getAccessToken } = usePrivy();
   const [phase, setPhase] = useState<Phase>("building");
   const [summary, setSummary] = useState<Summary | null>(null);
   const [swapTx, setSwapTx] = useState<string | null>(null);
@@ -165,10 +167,44 @@ export function ReviewModal({
         chain: "solana:mainnet",
       });
       setPhase("sending");
+      // Trade metadata for the portfolio record (server inserts only on confirm,
+      // keyed by the verified Privy token; failure here never blocks the swap).
+      const trade =
+        summary?.side === "buy"
+          ? {
+              token_address: address,
+              symbol,
+              side: "buy" as const,
+              amount_usd: summary.payUsd,
+              token_qty: summary.receive,
+              price_at_trade: summary.receive > 0 ? summary.payUsd / summary.receive : null,
+            }
+          : summary?.side === "sell"
+            ? {
+                token_address: address,
+                symbol,
+                side: "sell" as const,
+                amount_usd: summary.receiveUsd,
+                token_qty: summary.sellTokens,
+                price_at_trade:
+                  summary.receiveUsd && summary.sellTokens
+                    ? summary.receiveUsd / summary.sellTokens
+                    : null,
+              }
+            : undefined;
+      let authToken: string | null = null;
+      try {
+        authToken = await getAccessToken();
+      } catch {
+        /* not signed in / token unavailable — swap still relays, just not recorded */
+      }
       const res = await fetch("/api/swap/send", {
         method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ signedTxBase64: bytesToBase64(signedTransaction) }),
+        headers: {
+          "content-type": "application/json",
+          ...(authToken ? { authorization: `Bearer ${authToken}` } : {}),
+        },
+        body: JSON.stringify({ signedTxBase64: bytesToBase64(signedTransaction), trade }),
       });
       const data = (await res.json()) as
         | { ok: true; signature: string; status: string }
