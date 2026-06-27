@@ -36,7 +36,62 @@ const WEIGHTS: Record<string, number> = {
   mutable_metadata: 8,
 };
 
-export function score(input: ScoreInput): SafetyReport {
+/**
+ * RugCheck (primary model) result, pre-mapped into our signal vocabulary by
+ * signals.ts. `scoreNormalised` is 0–100, HIGHER = riskier.
+ */
+export interface RugReport {
+  scoreNormalised: number;
+  signals: RiskSignal[];
+}
+
+const SEV_RANK: Record<RiskSignal["severity"], number> = {
+  info: 0,
+  warn: 1,
+  danger: 2,
+  block: 3,
+};
+const LEVEL_RANK: Record<RiskLevel, number> = {
+  LOW: 0,
+  MEDIUM: 1,
+  HIGH: 2,
+  CRITICAL: 3,
+};
+
+function worstSeverity(signals: RiskSignal[]): RiskSignal["severity"] | null {
+  return signals.reduce<RiskSignal["severity"] | null>(
+    (w, s) => (w === null || SEV_RANK[s.severity] > SEV_RANK[w] ? s.severity : w),
+    null,
+  );
+}
+
+function levelFromSeverity(worst: RiskSignal["severity"] | null): RiskLevel {
+  if (worst === "block") return "CRITICAL";
+  if (worst === "danger") return "HIGH";
+  if (worst === "warn") return "MEDIUM";
+  return "LOW";
+}
+
+/** RugCheck's compressed 0–100 score → a level FLOOR (real level can be raised by severity). */
+function bandFromRugScore(n: number): RiskLevel {
+  if (n >= 81) return "CRITICAL";
+  if (n >= 61) return "HIGH";
+  if (n >= 31) return "MEDIUM";
+  return "LOW";
+}
+
+function maxLevel(a: RiskLevel, b: RiskLevel): RiskLevel {
+  return LEVEL_RANK[a] >= LEVEL_RANK[b] ? a : b;
+}
+
+/**
+ * Produce a SafetyReport. When `rug` is provided it's the PRIMARY model: the
+ * report's score IS RugCheck's normalised score, its signals lead, and our
+ * heuristic signals (in this path only the honeypot/price-impact corroboration)
+ * are merged in. When `rug` is null/absent we fall back to the v1 heuristic
+ * aggregation below. Verified (curated) mints always floor to LOW.
+ */
+export function score(input: ScoreInput, rug?: RugReport | null): SafetyReport {
   const signals: RiskSignal[] = [];
   let degraded = false;
   const note = (v: unknown) => { if (v === null) degraded = true; };
@@ -155,19 +210,44 @@ export function score(input: ScoreInput): SafetyReport {
   if (input.verified) {
     return {
       address: input.address, level: "LOW", score: 0, signals: [],
-      verified: true, generatedAt: Date.now(), degraded: false,
+      verified: true, generatedAt: Date.now(), degraded: false, source: "heuristic",
     };
   }
 
+  // --- PRIMARY: RugCheck present ---
+  // RugCheck's signals lead; our heuristic signals here are just the honeypot /
+  // price-impact corroboration. Dedupe by id (RugCheck wins). The level is the
+  // WORST of RugCheck's score band and the worst merged severity — so a single
+  // "block" (e.g. our probe finds no sell route) ⇒ CRITICAL even if RugCheck's
+  // compressed score is low, and a "danger" risk ⇒ at least HIGH.
+  if (rug) {
+    const byId = new Map<string, RiskSignal>();
+    for (const s of rug.signals) byId.set(s.id, s);
+    for (const s of signals) if (!byId.has(s.id)) byId.set(s.id, s);
+    const merged = [...byId.values()].filter((s) => s.triggered);
+    const level = maxLevel(
+      bandFromRugScore(rug.scoreNormalised),
+      levelFromSeverity(worstSeverity(merged)),
+    );
+    return {
+      address: input.address,
+      level,
+      score: Math.round(Math.min(100, Math.max(0, rug.scoreNormalised))),
+      signals: merged,
+      verified: false,
+      generatedAt: Date.now(),
+      degraded: false,
+      source: "rugcheck",
+    };
+  }
+
+  // --- FALLBACK: v1 heuristic aggregation ---
   const rawScore = signals.reduce((s, sig) => s + (WEIGHTS[sig.id] ?? 0), 0);
   const score = Math.min(100, rawScore);
 
   // Level is driven by the WORST severity present, then by cumulative score —
   // so one "block" signal => CRITICAL even if nothing else triggered.
-  const worst = signals.reduce<RiskSignal["severity"] | null>((w, s) => {
-    const rank = { info: 0, warn: 1, danger: 2, block: 3 };
-    return w === null || rank[s.severity] > rank[w] ? s.severity : w;
-  }, null);
+  const worst = worstSeverity(signals);
 
   let level: RiskLevel = "LOW";
   if (worst === "block") level = "CRITICAL";
@@ -177,6 +257,6 @@ export function score(input: ScoreInput): SafetyReport {
   return {
     address: input.address, level, score,
     signals: signals.filter((s) => s.triggered),
-    verified: false, generatedAt: Date.now(), degraded,
+    verified: false, generatedAt: Date.now(), degraded, source: "heuristic",
   };
 }

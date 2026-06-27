@@ -22,4 +22,5 @@ export interface SafetyReport {
   verified: boolean;     // on the curated allowlist → floored to LOW
   generatedAt: number;
   degraded: boolean;     // true if a data source was unavailable (score is best-effort)
+  source: "rugcheck" | "heuristic"; // which model produced this report
 }

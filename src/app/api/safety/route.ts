@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { edgeCache } from "@/lib/cache-headers";
 import { getSafetyReport } from "@/lib/safety/signals";
 
 /**
@@ -25,7 +26,5 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
   const report = await getSafetyReport(parsed.data.address, parsed.data.priceImpactPct ?? null);
-  return NextResponse.json(report, {
-    headers: { "Cache-Control": "public, max-age=0, s-maxage=300" },
-  });
+  return NextResponse.json(report, { headers: edgeCache(300) });
 }
