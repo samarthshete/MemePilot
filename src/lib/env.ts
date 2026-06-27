@@ -25,6 +25,10 @@ const serverEnvSchema = z.object({
   BIRDEYE_API_KEY: z.string().min(1).optional(),
   SOLANA_RPC_URL: z.url().optional(),
   JUPITER_API_KEY: z.string().min(1).optional(),
+  // Supabase (server-only): portfolio/trades persistence. Service-role key — must
+  // NEVER reach the client; only the server API routes touch the DB.
+  SUPABASE_URL: z.url().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
