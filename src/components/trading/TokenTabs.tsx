@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatCompact, formatUsdPrice, timeAgo } from "@/lib/format";
 
 type Holder = { owner: string; uiAmount: number; pctOfSupply: number | null };
@@ -40,12 +40,15 @@ export function TokenTabs({ address }: { address: string }) {
   const [holders, setHolders] = useState<Load<Holder>>({ status: "idle", items: [] });
   const [trades, setTrades] = useState<Load<Trade>>({ status: "idle", items: [] });
 
-  // Holders: fetch when the tab is viewed (and on token change). Never polled.
-  // No persistent "loaded" ref — that deadlocked under strict-mode's double
-  // mount (the only fetch's setState got cancelled) and left stale data across
-  // token navigation. Server-cached (300s), so refetching on view is cheap.
+  // Component is keyed by address upstream, so this state IS the per-token cache.
+  const tradesFetchedAt = useRef(0);
+
+  // Holders: fetch once per token, when first viewed. Cached in `holders` state,
+  // so switching tabs back and forth never refetches (only "idle"/"error" fetch;
+  // "ready"/"empty" are already loaded). Never polled. Server-cached 300s too.
   useEffect(() => {
     if (tab !== "holders") return;
+    if (holders.status === "ready" || holders.status === "empty") return;
     let active = true;
     void (async () => {
       const next = await load<Holder>(
@@ -57,10 +60,12 @@ export function TokenTabs({ address }: { address: string }) {
     return () => {
       active = false;
     };
-  }, [tab, address]);
+  }, [tab, address, holders.status]);
 
   // Live Trades: fetch on activation, then poll — but only while this tab is
-  // active AND the page is visible (Stage 2 hidden-tab pattern).
+  // active AND the page is visible (Stage 2 hidden-tab pattern). Cached in state,
+  // so re-activating shows the last list instantly; we only re-fetch immediately
+  // if the cached copy is older than one poll interval (no fetch on quick toggles).
   useEffect(() => {
     if (tab !== "trades") return;
     let active = true;
@@ -71,7 +76,10 @@ export function TokenTabs({ address }: { address: string }) {
         `/api/trades?address=${encodeURIComponent(address)}`,
         "trades",
       );
-      if (active) setTrades(next);
+      if (active) {
+        setTrades(next);
+        tradesFetchedAt.current = Date.now();
+      }
     };
     const start = () => {
       if (intervalId === null) intervalId = setInterval(refresh, TRADES_POLL_MS);
@@ -82,15 +90,18 @@ export function TokenTabs({ address }: { address: string }) {
         intervalId = null;
       }
     };
+    const refreshIfStale = () => {
+      if (Date.now() - tradesFetchedAt.current > TRADES_POLL_MS) void refresh();
+    };
     const onVisibility = () => {
       if (document.hidden) stop();
       else {
-        void refresh();
+        refreshIfStale();
         start();
       }
     };
 
-    void refresh();
+    refreshIfStale();
     if (!document.hidden) start();
     document.addEventListener("visibilitychange", onVisibility);
 
@@ -160,12 +171,22 @@ function HolderList({ holders }: { holders: Holder[] }) {
             <Copyable text={h.owner} />
           </span>
           <span className="flex shrink-0 flex-col items-end">
-            <span className="font-mono text-xs font-bold text-cw-text">
-              {h.pctOfSupply !== null ? `${h.pctOfSupply.toFixed(2)}%` : "—"}
-            </span>
-            <span className="font-mono text-[11px] text-cw-text-muted">
-              {formatCompact(h.uiAmount)}
-            </span>
+            {/* When supply is unavailable (overview rate-limited) we can't compute
+                %, so show the holding amount as the primary figure instead of "—". */}
+            {h.pctOfSupply !== null ? (
+              <>
+                <span className="font-mono text-xs font-bold text-cw-text">
+                  {h.pctOfSupply.toFixed(2)}%
+                </span>
+                <span className="font-mono text-[11px] text-cw-text-muted">
+                  {formatCompact(h.uiAmount)}
+                </span>
+              </>
+            ) : (
+              <span className="font-mono text-xs font-bold text-cw-text">
+                {formatCompact(h.uiAmount)}
+              </span>
+            )}
           </span>
         </li>
       ))}
