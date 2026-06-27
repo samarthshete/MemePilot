@@ -111,6 +111,28 @@ export function SiteFooter() {
           Memecoins are risky. Trade at your own risk. Not financial advice.
         </span>
       </div>
+
+      {/* Deployed commit SHA — repo↔prod parity, verifiable in one click. */}
+      <div className="px-[clamp(1.125rem,5vw,3rem)] pb-3 text-center">
+        <CommitSha />
+      </div>
     </footer>
+  );
+}
+
+function CommitSha() {
+  const fullSha = process.env.VERCEL_GIT_COMMIT_SHA;
+  const shortSha = fullSha ? fullSha.slice(0, 7) : "dev";
+  const cls = "font-mono text-xs text-cw-text-muted/40 transition-colors";
+  if (!fullSha) return <span className={cls}>{shortSha}</span>;
+  return (
+    <a
+      href={`https://github.com/samarthshete/MemePilot/commit/${fullSha}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`${cls} hover:text-cw-text-muted`}
+    >
+      {shortSha}
+    </a>
   );
 }

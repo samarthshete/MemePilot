@@ -4,6 +4,11 @@ A marketing **landing page** + a **web trading page** for **MemePilot**, a
 social-first, non-custodial **Solana** memecoin trading wallet. This is the web
 companion to the existing mobile app.
 
+## Deploy
+- **Live:** https://meme-pilot.vercel.app
+- **Repo:** https://github.com/samarthshete/MemePilot
+- The deployed commit SHA is visible in the site footer and at `/api/health` — so the live build is verifiably this repo.
+
 ## Stack
 - **Next.js (App Router) + TypeScript (strict) + Tailwind CSS v4** (CSS-first; brand
   tokens live in the `@theme` block of `src/app/globals.css` — there is no `tailwind.config`)
