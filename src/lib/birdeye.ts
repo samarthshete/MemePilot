@@ -312,25 +312,29 @@ async function getTokenSupply(address: string): Promise<number | null> {
   return (await getTokenOverview(address)).supply;
 }
 
-/** Top holders with % of supply (null if supply unavailable). Throws on holder-fetch failure. */
-export async function getTopHolders(
-  address: string,
-  limit = 20,
-): Promise<Holder[]> {
-  const json = holderSchema.parse(
-    await withRetry(() =>
-      birdeyeGet(
-        `/defi/v3/token/holder?address=${encodeURIComponent(address)}&offset=0&limit=${limit}`,
+/**
+ * Top holders with % of supply (null if supply unavailable). Throws on
+ * holder-fetch failure. Cached 300s per (address,limit) so BOTH the Holders tab
+ * (/api/holders) and the safety scorer share ONE upstream holder call — they no
+ * longer double-spend the free-tier budget on the same token.
+ */
+export function getTopHolders(address: string, limit = 20): Promise<Holder[]> {
+  return getOrSet(`holders:raw:${address}:${limit}`, 300_000, async () => {
+    const json = holderSchema.parse(
+      await withRetry(() =>
+        birdeyeGet(
+          `/defi/v3/token/holder?address=${encodeURIComponent(address)}&offset=0&limit=${limit}`,
+        ),
       ),
-    ),
-  );
-  const items = json.data?.items ?? [];
-  const supply = await getTokenSupply(address);
-  return items.map((h) => ({
-    owner: h.owner,
-    uiAmount: h.ui_amount,
-    pctOfSupply: supply && supply > 0 ? (h.ui_amount / supply) * 100 : null,
-  }));
+    );
+    const items = json.data?.items ?? [];
+    const supply = await getTokenSupply(address);
+    return items.map((h) => ({
+      owner: h.owner,
+      uiAmount: h.ui_amount,
+      pctOfSupply: supply && supply > 0 ? (h.ui_amount / supply) * 100 : null,
+    }));
+  });
 }
 
 /** Recent swaps, newest first. Throws on failure. */

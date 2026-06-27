@@ -72,22 +72,38 @@ async function checkRoutes(
   }
 }
 
+async function safe<T>(p: Promise<T>): Promise<T | null> {
+  try {
+    return await p;
+  } catch {
+    return null;
+  }
+}
+
 function gatherTokenSignals(address: string): Promise<TokenSignals> {
   return getOrSet(`safety:${address}`, TOKEN_TTL_MS, async () => {
     console.info(`[safety] cache miss → gathering signals for ${address}`);
-    const [auth, security, holders, market, routes] = await Promise.allSettled([
-      getMintAuthorities(address),
-      getTokenSecurity(address), // 401-gated on free tier → null (enrichment only)
-      getTopHolders(address, 20),
-      getTokenMarket(address),
-      checkRoutes(address),
+    // Don't fire every source in the same tick. The three BirdEye-touching calls
+    // are SEQUENCED (so we never hit BirdEye 3× simultaneously on the ~1 rps free
+    // tier); the Alchemy RPC (authority) and Jupiter (route probe) run alongside
+    // them. holders/overview reuse their shared caches, so a token already loaded
+    // by the Holders tab costs nothing here.
+    const [auth, routes, birdeye] = await Promise.all([
+      safe(getMintAuthorities(address)), // Alchemy RPC
+      safe(checkRoutes(address)), // Jupiter
+      (async () => {
+        const hs = await safe(getTopHolders(address, 20)); // BirdEye (shared cache)
+        const mk = await safe(getTokenMarket(address)); // BirdEye overview (cached 1h)
+        const sec = await safe(getTokenSecurity(address)); // BirdEye (401-gated → null)
+        return { hs, mk, sec };
+      })(),
     ]);
 
-    const a = auth.status === "fulfilled" ? auth.value : null;
-    const sec = security.status === "fulfilled" ? security.value : null;
-    const hs = holders.status === "fulfilled" ? holders.value : null;
-    const mk = market.status === "fulfilled" ? market.value : EMPTY;
-    const rt = routes.status === "fulfilled" ? routes.value : { buy: false, sell: null };
+    const a = auth;
+    const sec = birdeye.sec;
+    const hs = birdeye.hs;
+    const mk = birdeye.mk ?? EMPTY;
+    const rt = routes ?? { buy: false, sell: null };
 
     // Only trust concentration when supply (→ pctOfSupply) was known.
     const hasPct = !!hs && hs.length > 0 && hs[0].pctOfSupply !== null;
