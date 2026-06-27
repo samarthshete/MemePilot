@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useWallets } from "@privy-io/react-auth/solana";
+import { DepositModal } from "@/components/ui/DepositModal";
 import { publicEnv } from "@/lib/public-env";
 
 const PILL =
@@ -30,10 +31,11 @@ export function AuthButton() {
 }
 
 function AuthButtonInner() {
-  const { ready, authenticated, login, logout } = usePrivy();
+  const { ready, authenticated, login, logout, user } = usePrivy();
   const { wallets } = useWallets();
   const [menuOpen, setMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [depositOpen, setDepositOpen] = useState(false);
 
   // Pre-hydration / Privy still initializing → neutral placeholder (no flicker).
   if (!ready) {
@@ -69,6 +71,13 @@ function AuthButtonInner() {
     );
   }
 
+  // Prefer a human label: linked Google name → email (Google or email login) →
+  // truncated wallet address (the original behavior) so it never goes blank.
+  const display =
+    user?.google?.name || user?.google?.email || user?.email?.address || null;
+  const label = display ?? truncate(address);
+  const isAddressLabel = !display;
+
   const copyAddress = async () => {
     try {
       await navigator.clipboard.writeText(address);
@@ -86,10 +95,13 @@ function AuthButtonInner() {
         onClick={() => setMenuOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={menuOpen}
-        className={`${PILL} inline-flex items-center gap-1.5 border-cw-green/40 font-mono text-cw-text hover:border-cw-green`}
+        title={label}
+        className={`${PILL} inline-flex max-w-[140px] items-center gap-1.5 border-cw-green/40 text-cw-text hover:border-cw-green sm:max-w-[200px] ${
+          isAddressLabel ? "font-mono" : ""
+        }`}
       >
-        <span className="size-1.5 rounded-full bg-cw-green" aria-hidden="true" />
-        {truncate(address)}
+        <span className="size-1.5 shrink-0 rounded-full bg-cw-green" aria-hidden="true" />
+        <span className="truncate">{label}</span>
       </button>
 
       {menuOpen && (
@@ -102,8 +114,32 @@ function AuthButtonInner() {
           />
           <div
             role="menu"
-            className="absolute right-0 z-50 mt-2 w-44 overflow-hidden rounded-xl border border-white/10 bg-cw-surface p-1 shadow-2xl"
+            className="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-white/10 bg-cw-surface p-1 shadow-2xl"
           >
+            {/* Identity header: name/email + the wallet address kept visible. */}
+            <div className="px-3 py-2">
+              {display && (
+                <p className="truncate text-sm font-bold text-cw-text" title={display}>
+                  {display}
+                </p>
+              )}
+              <p className="mt-0.5 font-mono text-[11px] text-cw-text-muted">
+                {truncate(address)}
+              </p>
+            </div>
+            <div className="mx-1 my-1 h-px bg-white/8" />
+
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setMenuOpen(false);
+                setDepositOpen(true);
+              }}
+              className="block w-full rounded-lg px-3 py-2 text-left text-sm font-semibold text-cw-text transition-colors hover:bg-white/5"
+            >
+              Receive / Deposit
+            </button>
             <button
               type="button"
               role="menuitem"
@@ -125,6 +161,10 @@ function AuthButtonInner() {
             </button>
           </div>
         </>
+      )}
+
+      {depositOpen && (
+        <DepositModal address={address} onClose={() => setDepositOpen(false)} />
       )}
     </div>
   );
