@@ -11,8 +11,10 @@ import {
 
 const RANGES = ["1D", "1W", "1M"] as const;
 type Range = (typeof RANGES)[number];
-type Status = "loading" | "ready" | "empty" | "error";
+type Status = "loading" | "ready" | "degraded";
 type Point = { time: number; value: number };
+
+const RETRY_MS = 15_000; // auto-retry a degraded chart (cached server-side)
 
 /**
  * Area price chart (close prices) fed by /api/ohlcv. Brand-green, dark,
@@ -23,9 +25,11 @@ type Point = { time: number; value: number };
 export function PriceChart({ address }: { address: string }) {
   const [range, setRange] = useState<Range>("1D");
   const [status, setStatus] = useState<Status>("loading");
+  const [reloadTick, setReloadTick] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
+  const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Create the chart once.
   useEffect(() => {
@@ -73,10 +77,16 @@ export function PriceChart({ address }: { address: string }) {
     };
   }, []);
 
-  // Fetch + render data on address/range change. setState only after awaits
-  // (avoids synchronous setState in an effect body).
+  // Fetch + render data on address/range change (and on each auto-retry tick).
+  // setState only after awaits / inside the retry timeout (never synchronously in
+  // the effect body). A degraded result (rate-limited/empty/network) AUTO-RETRIES
+  // every ~15s instead of dying on a permanent "Chart unavailable".
   useEffect(() => {
     let active = true;
+    if (retryRef.current) {
+      clearTimeout(retryRef.current);
+      retryRef.current = null;
+    }
     void (async () => {
       let next: Status = "ready";
       try {
@@ -90,7 +100,7 @@ export function PriceChart({ address }: { address: string }) {
         };
         const points = data.points ?? [];
         if (data.unavailable || points.length === 0) {
-          next = "empty";
+          next = "degraded";
           seriesRef.current?.setData([]);
         } else {
           seriesRef.current?.setData(
@@ -99,14 +109,24 @@ export function PriceChart({ address }: { address: string }) {
           chartRef.current?.timeScale().fitContent();
         }
       } catch {
-        next = "error";
+        next = "degraded"; // network hiccup → keep retrying, never a dead chart
       }
-      if (active) setStatus(next);
+      if (!active) return;
+      setStatus(next);
+      if (next === "degraded") {
+        retryRef.current = setTimeout(() => {
+          if (active) setReloadTick((t) => t + 1);
+        }, RETRY_MS);
+      }
     })();
     return () => {
       active = false;
+      if (retryRef.current) {
+        clearTimeout(retryRef.current);
+        retryRef.current = null;
+      }
     };
-  }, [address, range]);
+  }, [address, range, reloadTick]);
 
   return (
     <div>
@@ -131,13 +151,11 @@ export function PriceChart({ address }: { address: string }) {
       <div className="relative">
         <div ref={containerRef} className="h-[300px] w-full" />
         {status !== "ready" && (
-          <div className="pointer-events-none absolute inset-0 grid place-items-center">
+          <div className="pointer-events-none absolute inset-0 grid place-items-center px-4 text-center">
             <span className="font-mono text-sm text-cw-text-muted">
               {status === "loading"
                 ? "Loading chart…"
-                : status === "empty"
-                  ? "Chart unavailable"
-                  : "Couldn’t load chart"}
+                : "Chart temporarily unavailable — retrying…"}
             </span>
           </div>
         )}
