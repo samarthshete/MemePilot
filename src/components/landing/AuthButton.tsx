@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { usePrivy } from "@privy-io/react-auth";
 import { useWallets } from "@privy-io/react-auth/solana";
 import { DepositModal } from "@/components/ui/DepositModal";
@@ -129,6 +130,14 @@ function AuthButtonInner() {
             </div>
             <div className="mx-1 my-1 h-px bg-white/8" />
 
+            <Link
+              href="/account"
+              role="menuitem"
+              onClick={() => setMenuOpen(false)}
+              className="block w-full rounded-lg px-3 py-2 text-left text-sm font-semibold text-cw-text transition-colors hover:bg-white/5"
+            >
+              Account
+            </Link>
             <button
               type="button"
               role="menuitem"
