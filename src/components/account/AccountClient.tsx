@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { usePrivy } from "@privy-io/react-auth";
 import { useWallets } from "@privy-io/react-auth/solana";
-import { DepositModal } from "@/components/ui/DepositModal";
 import { formatCompact, formatUsdPrice } from "@/lib/format";
 import { publicEnv } from "@/lib/public-env";
 import { SOL_MINT } from "@/lib/trading-config";
@@ -38,6 +38,7 @@ type Portfolio = {
   positions: Position[];
   history: HistoryItem[];
   hasDemo: boolean;
+  dbConfigured: boolean;
 };
 
 const CARD = "rounded-2xl border border-white/8 bg-cw-surface/40 p-4";
@@ -52,8 +53,8 @@ export function AccountClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [demoBusy, setDemoBusy] = useState(false);
+  const [demoMsg, setDemoMsg] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [deposit, setDeposit] = useState(false);
   const [send, setSend] = useState<null | "send" | "withdraw">(null);
 
   const display =
@@ -100,18 +101,34 @@ export function AccountClient() {
 
   const toggleDemo = async (method: "POST" | "DELETE") => {
     if (!address) return;
+    if (portfolio && !portfolio.dbConfigured) {
+      setDemoMsg("Connect the database to load sample data.");
+      return;
+    }
     setDemoBusy(true);
+    setDemoMsg(null);
     try {
       const token = await getAccessToken();
-      if (token) {
-        await fetch("/api/portfolio/seed-demo", {
-          method,
-          headers: { authorization: `Bearer ${token}` },
-        });
+      if (!token) {
+        setDemoMsg("Sign in again to manage sample data.");
+        return;
+      }
+      const res = await fetch("/api/portfolio/seed-demo", {
+        method,
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      if (res.status === 401) {
+        setDemoMsg("Session expired — sign in again.");
+      } else if (data.error === "not_configured") {
+        setDemoMsg("Connect the database to load sample data.");
+      } else if (!data.ok) {
+        setDemoMsg("Couldn’t update sample data — please try again.");
+      } else {
         await load();
       }
     } catch {
-      /* ignore — UI stays as-is */
+      setDemoMsg("Couldn’t reach the server — please try again.");
     } finally {
       setDemoBusy(false);
     }
@@ -176,8 +193,8 @@ export function AccountClient() {
         {/* Action row */}
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <ActionButton label="Send" onClick={() => setSend("send")} />
-          <ActionButton label="Receive" onClick={() => setDeposit(true)} />
-          <ActionButton label="Deposit" onClick={() => setDeposit(true)} />
+          <ActionButton label="Receive" href="/receive" />
+          <ActionButton label="Deposit" href="/receive" />
           <ActionButton label="Withdraw" onClick={() => setSend("withdraw")} />
         </div>
       </div>
@@ -194,24 +211,37 @@ export function AccountClient() {
       )}
 
       {/* Demo controls */}
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => toggleDemo("POST")}
-          disabled={demoBusy}
-          className="rounded-full border border-white/16 px-4 py-2 text-sm font-bold text-cw-text hover:border-white/40 disabled:opacity-50"
-        >
-          Load sample data
-        </button>
-        <button
-          type="button"
-          onClick={() => toggleDemo("DELETE")}
-          disabled={demoBusy}
-          className="rounded-full border border-white/16 px-4 py-2 text-sm font-bold text-cw-text-muted hover:border-white/40 disabled:opacity-50"
-        >
-          Clear sample data
-        </button>
-      </div>
+      {(() => {
+        const dbUnset = portfolio != null && !portfolio.dbConfigured;
+        return (
+          <div className="mt-4">
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => toggleDemo("POST")}
+                disabled={demoBusy || loading || dbUnset}
+                className="rounded-full border border-white/16 px-4 py-2 text-sm font-bold text-cw-text hover:border-white/40 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Load sample data
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleDemo("DELETE")}
+                disabled={demoBusy || loading || dbUnset}
+                className="rounded-full border border-white/16 px-4 py-2 text-sm font-bold text-cw-text-muted hover:border-white/40 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Clear sample data
+              </button>
+            </div>
+            {/* Honest state: never a silent dead click. */}
+            {(dbUnset || demoMsg) && (
+              <p className="mt-2 text-xs text-cw-amber" role="status">
+                {demoMsg ?? "Connect the database to load sample data."}
+              </p>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Holdings */}
       <Section title="Holdings">
@@ -331,7 +361,6 @@ export function AccountClient() {
         )}
       </Section>
 
-      {deposit && <DepositModal address={address} onClose={() => setDeposit(false)} />}
       {send && wallet && (
         <SendModal
           wallet={wallet}
@@ -345,13 +374,27 @@ export function AccountClient() {
   );
 }
 
-function ActionButton({ label, onClick }: { label: string; onClick: () => void }) {
+const ACTION_CLASS =
+  "block rounded-xl border border-white/12 py-2.5 text-center text-sm font-bold text-cw-text transition-colors hover:border-cw-green hover:text-cw-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cw-green";
+
+function ActionButton({
+  label,
+  onClick,
+  href,
+}: {
+  label: string;
+  onClick?: () => void;
+  href?: string;
+}) {
+  if (href) {
+    return (
+      <Link href={href} className={ACTION_CLASS}>
+        {label}
+      </Link>
+    );
+  }
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="rounded-xl border border-white/12 py-2.5 text-sm font-bold text-cw-text transition-colors hover:border-cw-green hover:text-cw-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cw-green"
-    >
+    <button type="button" onClick={onClick} className={`${ACTION_CLASS} w-full`}>
       {label}
     </button>
   );

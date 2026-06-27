@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { buildPortfolio } from "@/lib/portfolio";
 import { verifyPrivyDid } from "@/lib/privy-auth";
-import { upsertUser } from "@/lib/supabase";
+import { isSupabaseConfigured, upsertUser } from "@/lib/supabase";
 
 /**
  * GET /api/portfolio?owner=<wallet>&name=&email=
@@ -37,7 +37,8 @@ export async function GET(request: Request) {
   await upsertUser({ privy_did: did, wallet_address: owner, display_name: name, email });
 
   const portfolio = await buildPortfolio(did, owner);
-  return NextResponse.json(portfolio, {
-    headers: { "Cache-Control": "private, no-store" },
-  });
+  return NextResponse.json(
+    { ...portfolio, dbConfigured: isSupabaseConfigured() },
+    { headers: { "Cache-Control": "private, no-store" } },
+  );
 }
