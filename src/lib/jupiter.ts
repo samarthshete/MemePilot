@@ -77,6 +77,9 @@ export async function getQuote(params: QuoteParams): Promise<JupiterQuote> {
     `${base}?inputMint=${params.inputMint}&outputMint=${params.outputMint}` +
     `&amount=${params.amount}&slippageBps=${params.slippageBps}&swapMode=ExactIn`;
 
+  // Quotes are latency-sensitive and the keyless lite host is only ~0.5 rps, so on
+  // 429/5xx we do exactly ONE short retry (attempts=2) then surface the error —
+  // the caller maps it to "Quote unavailable" rather than hammering the limit.
   const json = await withRetry(async () => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -95,7 +98,7 @@ export async function getQuote(params: QuoteParams): Promise<JupiterQuote> {
     } finally {
       clearTimeout(timer);
     }
-  });
+  }, 2);
 
   return quoteSchema.parse(json);
 }
