@@ -41,3 +41,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# internal notes / agent config — kept locally, never published
+CLAUDE.md
+AGENTS.md
+ChadWallet-Web-PRD.md
+docs/DECISIONS.md
+.claude/
+*LOOM*
+*SUBMISSION*
+*PLAYBOOK*
